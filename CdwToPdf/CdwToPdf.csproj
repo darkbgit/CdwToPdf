@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <COMReference Include="Pdf2d_LIBRARY">
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>1</VersionMajor>
+      <Guid>31ebf650-bd38-43ec-892b-1f8ac6c14430</Guid>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CONVERTLIBINTERFACES">
+      <HintPath>..\..\CSharp\Common\CONVERTLIBINTERFACES.dll</HintPath>
+    </Reference>
+    <Reference Include="KompasAPI7">
+      <HintPath>..\..\CSharp\Common\KompasAPI7.dll</HintPath>
+    </Reference>
+    <Reference Include="KompasLibrary">
+      <HintPath>..\..\CSharp\Common\KompasLibrary.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

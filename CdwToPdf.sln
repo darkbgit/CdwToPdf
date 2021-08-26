@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31612.314
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CdwToPdf", "CdwToPdf\CdwToPdf.csproj", "{AB861093-48CA-4EC9-B3E0-9C95DE365A6F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AB861093-48CA-4EC9-B3E0-9C95DE365A6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB861093-48CA-4EC9-B3E0-9C95DE365A6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB861093-48CA-4EC9-B3E0-9C95DE365A6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB861093-48CA-4EC9-B3E0-9C95DE365A6F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C298AFFD-D04F-41DF-8851-5ACA7ED531C0}
+	EndGlobalSection
+EndGlobal
