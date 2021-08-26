@@ -5,9 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CdwToPdf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="600">
     <Grid>
-        <Button Content="Button" HorizontalAlignment="Left" Margin="205,187,0,0" VerticalAlignment="Top" Click="Button_Click"/>
+        <Button x:Name="BtnConvert" Content="Convert" HorizontalAlignment="Left" Margin="99,373,0,0" VerticalAlignment="Top" Click="BtnConvert_Click"/>
+        <ListView d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,0,206,106">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button x:Name="BtnChoose" Content="Choose.." HorizontalAlignment="Left" Margin="10,373,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="CbSubdirs" Content="Subdirs" HorizontalAlignment="Left" Margin="10,333,0,0" VerticalAlignment="Top"/>
 
     </Grid>
 </Window>
