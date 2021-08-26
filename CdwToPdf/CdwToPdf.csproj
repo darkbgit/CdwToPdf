@@ -5,6 +5,7 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+	  <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,9 +30,6 @@
     </Reference>
     <Reference Include="KompasAPI7">
       <HintPath>..\..\CSharp\Common\KompasAPI7.dll</HintPath>
-    </Reference>
-    <Reference Include="KompasLibrary">
-      <HintPath>..\..\CSharp\Common\KompasLibrary.dll</HintPath>
     </Reference>
   </ItemGroup>
 

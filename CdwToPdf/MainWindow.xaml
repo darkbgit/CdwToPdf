@@ -8,15 +8,10 @@
         Title="MainWindow" Height="450" Width="600">
     <Grid>
         <Button x:Name="BtnConvert" Content="Convert" HorizontalAlignment="Left" Margin="99,373,0,0" VerticalAlignment="Top" Click="BtnConvert_Click"/>
-        <ListView d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,0,206,106">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn/>
-                </GridView>
-            </ListView.View>
-        </ListView>
-        <Button x:Name="BtnChoose" Content="Choose.." HorizontalAlignment="Left" Margin="10,373,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="BtnChoose" Content="Choose.." HorizontalAlignment="Left" Margin="10,373,0,0" VerticalAlignment="Top" Click="BtnChoose_Click"/>
         <CheckBox x:Name="CbSubdirs" Content="Subdirs" HorizontalAlignment="Left" Margin="10,333,0,0" VerticalAlignment="Top"/>
+        <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" Margin="131,36,300,157"/>
+        <MediaElement HorizontalAlignment="Left" Height="100" Margin="536,528,0,0" VerticalAlignment="Top" Width="100"/>
 
     </Grid>
 </Window>
