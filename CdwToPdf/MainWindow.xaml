@@ -5,13 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CdwToPdf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="600">
+        Title="MainWindow" Height="450" Width="550" MinWidth="550" MinHeight="450" MaxHeight="450" Loaded="Window_Loaded">
+    <Window.Resources>
+        <Style x:Key="ImageDisabled" TargetType="Image">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.5"></Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
     <Grid>
-        <Button x:Name="BtnConvert" Content="Convert" HorizontalAlignment="Left" Margin="99,373,0,0" VerticalAlignment="Top" Click="BtnConvert_Click"/>
-        <Button x:Name="BtnChoose" Content="Choose.." HorizontalAlignment="Left" Margin="10,373,0,0" VerticalAlignment="Top" Click="BtnChoose_Click"/>
-        <CheckBox x:Name="CbSubdirs" Content="Subdirs" HorizontalAlignment="Left" Margin="10,333,0,0" VerticalAlignment="Top"/>
-        <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" Margin="131,36,300,157"/>
-        <MediaElement HorizontalAlignment="Left" Height="100" Margin="536,528,0,0" VerticalAlignment="Top" Width="100"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="500*"/>
+            <ColumnDefinition Width="50"/>
+        </Grid.ColumnDefinitions>
 
+        <Button x:Name="btnConvert" Content="Convert" HorizontalAlignment="Left" Margin="285,0,0,10" VerticalAlignment="Bottom" Click="BtnConvert_Click" IsEnabled="False" Grid.Row="1" Height="20" Width="46"/>
+        <Button x:Name="btnChooseDir" Content="Choose dir..." HorizontalAlignment="Left" Margin="10,335,0,10" VerticalAlignment="Bottom" Click="BtnChooseDir_Click" Width="100" Grid.Row="1" Height="20"/>
+        <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Left" Margin="10,301,0,45" VerticalAlignment="Bottom" Grid.Row="1" Height="15" Width="59"/>
+        <ListBox x:Name="lbFiles" Margin="0,0,3,70" Grid.RowSpan="2" ItemsSource="{Binding _filesToConvert}" SelectionChanged="lbFiles_SelectionChanged" />
+        <Button x:Name="btnChooseFile" Content="Choose file..." HorizontalAlignment="Left" Margin="150,335,0,10" VerticalAlignment="Bottom" Click="BtnChooseFile_Click" Width="100" Grid.Row="1" Height="20"/>
+        <Button x:Name="btnUp" HorizontalAlignment="Left" Margin="2,50,0,0" VerticalAlignment="Top" Width="40" Height="40" Grid.Column="1" IsEnabled="False" Click="BtnUp_Click">
+                <Image Source="/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
+        </Button>
+        <Button x:Name="btnRemove" HorizontalAlignment="Left" Margin="2,100,0,0" VerticalAlignment="Top" Width="40" Height="40" Grid.Column="1" IsEnabled="False" Click="BtnRemove_Click">
+            <Image Source="/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
+        </Button>
+        <Button x:Name="btnDown" HorizontalAlignment="Left" Margin="2,150,0,0" VerticalAlignment="Top" Width="40" Height="40" Grid.Column="1" IsEnabled="False" Click="BtnDown_Click">
+            <Image Source="/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
+        </Button>
     </Grid>
 </Window>

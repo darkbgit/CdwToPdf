@@ -6,7 +6,14 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
 	  <UseWindowsForms>true</UseWindowsForms>
+	  <PackageIcon>1497559403-download_84987.ico</PackageIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="angle-arrow-down_icon-icons.com_73683.png" />
+    <None Remove="delete_delete_exit_1577.png" />
+    <None Remove="up-arrow_icon-icons.com_73351.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <COMReference Include="Pdf2d_LIBRARY">
@@ -21,7 +28,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\..\Icons\1497559403-download_84987.ico">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetZip" Version="1.15.0" />
+    <PackageReference Include="Ookii.Dialogs.Wpf" Version="3.1.0" />
     <PackageReference Include="PDFsharpNetStandard2" Version="1.51.4845" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +48,12 @@
     <Reference Include="KompasAPI7">
       <HintPath>..\..\CSharp\Common\KompasAPI7.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="angle-arrow-down_icon-icons.com_73683.png" />
+    <Resource Include="delete_delete_exit_1577.png" />
+    <Resource Include="up-arrow_icon-icons.com_73351.png" />
   </ItemGroup>
 
 </Project>
