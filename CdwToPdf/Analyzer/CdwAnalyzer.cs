@@ -1,30 +1,57 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Xml;
 using System.Xml.Linq;
+using CdwToPdf.Core;
+using CdwToPdf.Enums;
 using CdwToPdf.Model;
+using FileInfo = CdwToPdf.Core.FileInfo;
 
 namespace CdwToPdf.Analyzer
 {
-    class CdwAnalyzer
+    public class CdwAnalyzer
     {
         private XDocument _xDoc;
+        private string str;
 
         public bool Opened { get; private set; }
         public bool IsCompleted { get; private set; }
-        public List<DocProp> Prop { get; private set; }
-        public Drawing Drawing { get; private set; }
+        public FileInfo FileInfo { get; private set; } = new FileInfo();
 
-        public CdwAnalyzer(Stream fileStream)
+
+
+        public CdwAnalyzer(Stream fileStream, string path)
         {
             IsCompleted = false;
+            FileInfo.Path = path;
             var z = new ZFile();
             if (!z.IsZip(fileStream)) return;
-            z.ExtractFileToMemoryStream(fileStream, "MetaProductInfo");
-            LoadFromMemoryStream(z.OutputMemStream);
+
+            z.ExtractFileToMemoryStream(fileStream, "FileInfo");
+
+            IsCompleted = false;
+
+            LoadFromMemoryStream(z.OutputMemStream, true);
             if (!Opened) return;
             try
             {
-                RunParseCdw1();
+                RunParseCdw_FileInfo();
+            }
+            catch
+            {
+                Opened = false;
+                IsCompleted = false;
+            }
+            z.ExtractFileToMemoryStream(fileStream, "MetaProductInfo");
+            LoadFromMemoryStream(z.OutputMemStream, false);
+            if (!Opened) return;
+            try
+            {
+                RunParseCdw_MetaProductInfo();
             }
             catch
             {
@@ -33,170 +60,96 @@ namespace CdwToPdf.Analyzer
             }
         }
 
-        private void RunParseCdw()
+
+        private void RunParseCdw_MetaProductInfo()
         {
-            if (_xDoc == null)
-                return;
+            if (_xDoc == null) return;
 
-            Drawing = new Drawing();
-            Prop = new List<DocProp>();
+            if (!IsCompleted) return;
 
-            var properties = _xDoc.Descendants("property");
-            foreach (var prop in properties)
+            var docSection = _xDoc
+                .Element("document")
+                ?.Element("product")
+                ?.Elements("document");
+
+            var name = docSection
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "name")
+                ?.Attribute("value")
+                ?.Value;
+
+            if (name != null)
             {
-                string id = null, val = null, source = null;
-                foreach (var attr in prop.Attributes())
-                {
-                    if (attr.Name == "id") id = attr.Value;
-                    if (attr.Name == "value") val = attr.Value;
-                    if (attr.Name == "source") source = attr.Value;
-                }
-                var propertyDescriptions = _xDoc.Descendants("propertyDescription");
-                foreach (var propertyDescription in propertyDescriptions)
-                {
-                    string id2 = null, name = null, typeValue = null,
-                        natureId = null, unitId = null;
-                    foreach (var attr in propertyDescription.Attributes())
-                    {
-                        if (attr.Name == "id") id2 = attr.Value;
-                        if (attr.Name == "name") name = attr.Value;
-                        if (attr.Name == "typeValue") typeValue = attr.Value;
-                        if (attr.Name == "natureId") natureId = attr.Value;
-                        if (attr.Name == "unitId") unitId = attr.Value;
-                    }
-                    if (id == null || id != id2) continue;
-                    var spcProp = new DocProp
-                    {
-                        Name = name,
-                        Value = val,
-                        TypeValue = typeValue,
-                        NatureId = natureId,
-                        UnitId = unitId,
-                        Source = source
-                    };
-                    Prop.Add(spcProp);
-                }
+                FileInfo.Name = name;
             }
 
-            var sheets = _xDoc.Descendants("sheets");
-            foreach (var sheet in sheets)
+            var isAssemblyDrawing = docSection
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "marking")
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "documentNumber")
+                ?.Attribute("value")
+                ?.Value == "СБ";
+
+            FileInfo.IsAssemblyDrawing = isAssemblyDrawing;
+
+            var designation = docSection
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "marking")
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "base")
+                ?.Attribute("value")
+                ?.Value;
+
+            if (designation != null)
             {
-                var ds = new DrawingSheet();
-                foreach (var attrs in sheet.Nodes())
-                {
-                    if (attrs is XElement elm)
-                    {
-                        foreach (var attr in elm.Attributes())
-                        {
-                            if (attr.Name == "format")
-                                ds.Format = attr.Value;
-                            int number;
-                            if (attr.Name == "orientation")
-                            {
-                                if (int.TryParse(attr.Value, out number))
-                                    ds.Orientation = number;
-                            }
-                            if (attr.Name == "height")
-                            {
-                                if (int.TryParse(attr.Value, out number))
-                                    ds.Height = number;
-                            }
-                            if (attr.Name != "width") continue;
-                            if (int.TryParse(attr.Value, out number))
-                                ds.Width = number;
-                        }
-                    }
-                }
-                Drawing.Sheets.Add(ds);
+                FileInfo.Designation = designation + (isAssemblyDrawing ? " СБ" : "");
             }
-            Drawing.ListSpcProps = Prop;
+
+
             IsCompleted = true;
         }
 
-        private void RunParseCdw1()
+        private void RunParseCdw_FileInfo()
         {
-            if (_xDoc == null)
+            if (!str.Any())
                 return;
+            const string appName = "AppVersion=";
 
-            Drawing = new Drawing();
-            Prop = new List<DocProp>();
+            var version = str.Split('\n')
+                .FirstOrDefault(st => st.Contains(appName))
+                ?[appName.Length..];
 
-            var properties = _xDoc.Elements("//product//document//property[@id=name");
-            foreach (var prop in properties)
+            if (version == null)
             {
-                string id = null, val = null, source = null;
-                foreach (var attr in prop.Attributes())
-                {
-                    if (attr.Name == "id") id = attr.Value;
-                    if (attr.Name == "value") val = attr.Value;
-                    if (attr.Name == "source") source = attr.Value;
-                }
-                var propertyDescriptions = _xDoc.Descendants("propertyDescription");
-                foreach (var propertyDescription in propertyDescriptions)
-                {
-                    string id2 = null, name = null, typeValue = null,
-                        natureId = null, unitId = null;
-                    foreach (var attr in propertyDescription.Attributes())
-                    {
-                        if (attr.Name == "id") id2 = attr.Value;
-                        if (attr.Name == "name") name = attr.Value;
-                        if (attr.Name == "typeValue") typeValue = attr.Value;
-                        if (attr.Name == "natureId") natureId = attr.Value;
-                        if (attr.Name == "unitId") unitId = attr.Value;
-                    }
-                    if (id == null || id != id2) continue;
-                    var spcProp = new DocProp
-                    {
-                        Name = name,
-                        Value = val,
-                        TypeValue = typeValue,
-                        NatureId = natureId,
-                        UnitId = unitId,
-                        Source = source
-                    };
-                    Prop.Add(spcProp);
-                }
+                MessageBox.Show($"File {FileInfo.Path} version undefined");
+                return;
             }
 
-            var sheets = _xDoc.Descendants("sheets");
-            foreach (var sheet in sheets)
+            var ver = Convert.ToDouble(version.Split('_').LastOrDefault(), CultureInfo.InvariantCulture);
+
+            if (ver < 19)
             {
-                var ds = new DrawingSheet();
-                foreach (var attrs in sheet.Nodes())
-                {
-                    if (attrs is XElement elm)
-                    {
-                        foreach (var attr in elm.Attributes())
-                        {
-                            if (attr.Name == "format")
-                                ds.Format = attr.Value;
-                            int number;
-                            if (attr.Name == "orientation")
-                            {
-                                if (int.TryParse(attr.Value, out number))
-                                    ds.Orientation = number;
-                            }
-                            if (attr.Name == "height")
-                            {
-                                if (int.TryParse(attr.Value, out number))
-                                    ds.Height = number;
-                            }
-                            if (attr.Name != "width") continue;
-                            if (int.TryParse(attr.Value, out number))
-                                ds.Width = number;
-                        }
-                    }
-                }
-                Drawing.Sheets.Add(ds);
+                MessageBox.Show($"File {FileInfo.Path} version undo 19");
+                return;
             }
-            Drawing.ListSpcProps = Prop;
+
+
+            var t = str.Split('\n')
+                .FirstOrDefault(st => st.Contains("FileType="))
+                ?.Last()
+                .ToString();
+
+            if (t == null) return;
+
+            FileInfo.DrawingType = (DrawingType)Convert.ToInt32(t);
+
             IsCompleted = true;
         }
 
-        private void LoadFromMemoryStream(Stream ms)
+        private void LoadFromMemoryStream(Stream ms, bool isString)
         {
             Opened = false;
-            IsCompleted = false;
             try
             {
                 var p = ms.Position;
@@ -204,7 +157,14 @@ namespace CdwToPdf.Analyzer
                 var reader = new StreamReader(ms);
                 var s = reader.ReadToEnd();
                 ms.Position = p;
-                _xDoc = XDocument.Parse(s);
+                if (isString)
+                {
+                    str = s;
+                }
+                else
+                {
+                    _xDoc = XDocument.Parse(s);
+                }
                 Opened = true;
             }
             catch

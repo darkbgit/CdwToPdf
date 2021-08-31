@@ -16,10 +16,12 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Forms;
 using CdwToPdf.Analyzer;
+using CdwToPdf.Enums;
 using KompasAPI7;
 using Pdf2d_LIBRARY;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using FileInfo = CdwToPdf.Core.FileInfo;
 using ListBox = System.Windows.Controls.ListBox;
 
 
@@ -65,7 +67,7 @@ namespace CdwToPdf
 
             foreach (var file in _filesToConvert)
             {
-                var pdfFile = file.Path[..^3] + "pdf";
+                var pdfFile = file.Path[..^file.Path.Split('\\').LastOrDefault().Length] + file + ".pdf";
                 var result = iConverter
                     .Convert(file.Path, pdfFile, 0, false);
 
@@ -108,13 +110,29 @@ namespace CdwToPdf
                 })
                 .ToList();
 
+            foreach (var file in _filesToConvert)
+            {
+   
+                FileStream fs = new FileStream(file.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                CdwAnalyzer cdwAnalyzer = new(fs, file.Path);
+
+                if (!cdwAnalyzer.IsCompleted) continue;
+
+                file.Designation = cdwAnalyzer.FileInfo.Designation;
+                file.Name = cdwAnalyzer.FileInfo.Name;
+                file.DrawingType = cdwAnalyzer.FileInfo.DrawingType;
+            }
+
+
             lbFiles.Items.Clear();
 
             //lbFiles.UpdateLayout();
 
+            _filesToConvert = _filesToConvert.OrderBy(f => f.Designation).ToList();
+
             foreach (var item in _filesToConvert)
             {
-                lbFiles.Items.Add(item.Path[(path.Length + 1)..]);
+                lbFiles.Items.Add(item.ToString());
             }
                 
             System.Windows.MessageBox.Show(string.Join(Environment.NewLine, _filesToConvert));
@@ -137,15 +155,16 @@ namespace CdwToPdf
             var path = dialog.FileName;
 
             FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            CdwAnalyzer cdwAnalyzer = new CdwAnalyzer(file);
+            CdwAnalyzer cdwAnalyzer = new CdwAnalyzer(file, path);
            
 
 
             _filesToConvert.Add(new FileInfo
             {
                 Path = path,
-                Name = cdwAnalyzer.Drawing.GetName(),
-                Designation = cdwAnalyzer.Drawing.GetDesignation()
+                Name = cdwAnalyzer.FileInfo.Name,
+                Designation = cdwAnalyzer.FileInfo.Designation,
+                DrawingType = cdwAnalyzer.FileInfo.DrawingType
             });
 
 
