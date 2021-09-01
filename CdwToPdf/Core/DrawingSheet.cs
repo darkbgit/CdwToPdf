@@ -1,4 +1,4 @@
-﻿namespace CdwToPdf.Model
+﻿namespace CdwToPdf.Core
 {
     public class DrawingSheet
     {
@@ -10,7 +10,5 @@
         /// Пример 1 горизонатальная (альбомный) - 0 вертикальный
         /// </summary>
         public int Orientation { get; set; }
-        public int Height { get; set; }
-        public int Width { get; set; }
     }
 }

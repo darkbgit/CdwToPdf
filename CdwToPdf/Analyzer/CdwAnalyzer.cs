@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CdwToPdf.Core;
+using CdwToPdf.Enums;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
-using System.Xml;
 using System.Xml.Linq;
-using CdwToPdf.Core;
-using CdwToPdf.Enums;
-using CdwToPdf.Model;
-using FileInfo = CdwToPdf.Core.FileInfo;
+
 
 namespace CdwToPdf.Analyzer
 {
@@ -20,14 +18,14 @@ namespace CdwToPdf.Analyzer
 
         public bool Opened { get; private set; }
         public bool IsCompleted { get; private set; }
-        public FileInfo FileInfo { get; private set; } = new FileInfo();
+        public DrawingFileInfo DrawingFileInfo { get; private set; } = new DrawingFileInfo();
 
 
 
         public CdwAnalyzer(Stream fileStream, string path)
         {
             IsCompleted = false;
-            FileInfo.Path = path;
+            DrawingFileInfo.Path = path;
             var z = new ZFile();
             if (!z.IsZip(fileStream)) return;
 
@@ -72,16 +70,6 @@ namespace CdwToPdf.Analyzer
                 ?.Element("product")
                 ?.Elements("document");
 
-            var name = docSection
-                ?.Elements("property")
-                .FirstOrDefault(e => e.Attribute("id").Value == "name")
-                ?.Attribute("value")
-                ?.Value;
-
-            if (name != null)
-            {
-                FileInfo.Name = name;
-            }
 
             var isAssemblyDrawing = docSection
                 ?.Elements("property")
@@ -91,7 +79,27 @@ namespace CdwToPdf.Analyzer
                 ?.Attribute("value")
                 ?.Value == "СБ";
 
-            FileInfo.IsAssemblyDrawing = isAssemblyDrawing;
+            DrawingFileInfo.IsAssemblyDrawing = isAssemblyDrawing;
+
+            var name = docSection
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "name")
+                ?.Attribute("value")
+                ?.Value;
+
+            if (name != null)
+            {
+                name = name.Replace("@/", ". ");
+                if (isAssemblyDrawing)
+                {
+                    name = name[..^18];
+                }
+
+                name = Regex.Replace(name, @"[\/?:*""><|]+", "", RegexOptions.Compiled);
+                DrawingFileInfo.Name = name;
+            }
+
+
 
             var designation = docSection
                 ?.Elements("property")
@@ -103,7 +111,7 @@ namespace CdwToPdf.Analyzer
 
             if (designation != null)
             {
-                FileInfo.Designation = designation + (isAssemblyDrawing ? " СБ" : "");
+                DrawingFileInfo.Designation = designation;
             }
 
 
@@ -122,7 +130,7 @@ namespace CdwToPdf.Analyzer
 
             if (version == null)
             {
-                MessageBox.Show($"File {FileInfo.Path} version undefined");
+                MessageBox.Show($"File {DrawingFileInfo.Path} version undefined");
                 return;
             }
 
@@ -130,7 +138,7 @@ namespace CdwToPdf.Analyzer
 
             if (ver < 19)
             {
-                MessageBox.Show($"File {FileInfo.Path} version undo 19");
+                MessageBox.Show($"File {DrawingFileInfo.Path} version undo 19");
                 return;
             }
 
@@ -142,7 +150,7 @@ namespace CdwToPdf.Analyzer
 
             if (t == null) return;
 
-            FileInfo.DrawingType = (DrawingType)Convert.ToInt32(t);
+            DrawingFileInfo.DrawingType = (DrawingType)Convert.ToInt32(t);
 
             IsCompleted = true;
         }

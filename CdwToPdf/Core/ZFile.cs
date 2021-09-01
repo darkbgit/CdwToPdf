@@ -6,7 +6,7 @@ namespace CdwToPdf.Core
 {
     public class ZFile
     {
-        public MemoryStream OutputMemStream { get; private set; }
+        public MemoryStream? OutputMemStream { get; private set; }
 
         public bool IsZip(Stream fileStream)
         {

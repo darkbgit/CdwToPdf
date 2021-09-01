@@ -1,85 +1,143 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Forms;
-using CdwToPdf.Analyzer;
-using CdwToPdf.Enums;
+﻿using CdwToPdf.Analyzer;
+using CdwToPdf.Core;
 using KompasAPI7;
 using Pdf2d_LIBRARY;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
-using FileInfo = CdwToPdf.Core.FileInfo;
-using ListBox = System.Windows.Controls.ListBox;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Forms;
+using MessageBox = System.Windows.MessageBox;
 
 
 namespace CdwToPdf
 {
+    internal delegate void UpdateProgressBarDelegate(DependencyProperty dp, object value);
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly BackgroundWorker _worker;
+
+        private List<DrawingFileInfo> _filesToConvert = new();
+
+        private const string KOMPAS_API = "KOMPAS.Application.7";
+        private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v20\Bin\Pdf2d.dll";
+
         public MainWindow()
         {
             InitializeComponent();
+            _worker = new BackgroundWorker();
+            _worker.DoWork += Worker_DoWork;
         }
-       
 
-        private List<FileInfo> _filesToConvert = new();
-        
+        private void Worker_DoWork(object? sender, DoWorkEventArgs e)
+        {
+            ConvertFiles();
+        }
 
-        private void BtnConvert_Click(object sender, RoutedEventArgs e)
+        private static IConverter? GetConverter(string pathPdfConverter, string apiApplication)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            const string KOMPAS_PROG_ID = "KOMPAS.Application.7";
-            const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v20\Bin\Pdf2d.dll";
+            
 
-            Type t7 = Type.GetTypeFromProgID(KOMPAS_PROG_ID) ?? throw new InvalidOperationException();
-            IApplication kmpsApp =
-                Activator.CreateInstance(t7) as IApplication ?? throw new InvalidOperationException();
+            Type? t7 = Type.GetTypeFromProgID(apiApplication);
+            if (t7 == null) return null;
 
+            if (Activator.CreateInstance(t7) is not IApplication kompasApp) return null;
 
-
-            IConverter iConverter = kmpsApp.Converter[KOMPAS_PATH_PDF_CONVERTER];
+            IConverter iConverter = kompasApp.Converter[pathPdfConverter];
+            if (iConverter == null) return null;
 
             IPdf2dParam param = (IPdf2dParam)iConverter.ConverterParameters(0);
             //param.OnlyThinLine = true;
 
-            if (!_filesToConvert.Any()) return;
+            return iConverter;
+        }
 
-            var path = _filesToConvert.FirstOrDefault().Path
-            [..^_filesToConvert.FirstOrDefault().Path.Split('\\').LastOrDefault().Length];
+        private void ConvertFiles()
+        {
+            UpdateProgressBarDelegate updProgress = pbConvert.SetValue;
+
+            double value = 0;
+
+            IConverter? converter = GetConverter(KOMPAS_PATH_PDF_CONVERTER, KOMPAS_API);
+
+            if (converter == null)
+            {
+                MessageBox.Show("Couldn't create Kompas converter");
+                return;
+            }
+
+            _ = Dispatcher.Invoke(updProgress, RangeBase.ValueProperty, ++value);
+            if (!_filesToConvert.Any()) return;
 
             using var targetDoc = new PdfDocument();
 
             foreach (var file in _filesToConvert)
             {
-                var pdfFile = file.Path[..^file.Path.Split('\\').LastOrDefault().Length] + file + ".pdf";
-                var result = iConverter
-                    .Convert(file.Path, pdfFile, 0, false);
+                var lastIndex = file.Path.LastIndexOf('\\');
 
-                System.Windows.MessageBox.Show(result.ToString());
+                if (lastIndex == -1)
+                {
+                    MessageBox.Show($"Wrong path for file {file.Path}");
+                    continue;
+                }
+                var pdfFile = file.Path[..lastIndex] + file + ".pdf";
+
+                if (converter.Convert(file.Path, pdfFile, 0, false) == 0)
+                {
+                    MessageBox.Show($"Couldn't convert to pdf file {file.Path}");
+                }
 
                 using var pdfDoc = PdfReader.Open(pdfFile, PdfDocumentOpenMode.Import);
-                for (var i = 0; i < pdfDoc.PageCount; i++)
-                    targetDoc.AddPage(pdfDoc.Pages[i]);
-                pdfDoc.Close();
-            }
+                try
+                {
+                    for (var i = 0; i < pdfDoc.PageCount; i++)
+                    {
+                        targetDoc.AddPage(pdfDoc.Pages[i]);
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show($"Couldn't add to pdf file {pdfFile}");
+                }
+                
 
-            targetDoc.Save(path + "combine.pdf");
+                pdfDoc.Close();
+
+                File.Delete(pdfFile);
+
+                _ = Dispatcher.Invoke(updProgress, RangeBase.ValueProperty, ++value);
+            }
+            
+
+            var path = _filesToConvert.First().Path
+                [..(_filesToConvert.First().Path.LastIndexOf('.') + 1)];
+            targetDoc.Save(path + "pdf");
+
+            MessageBox.Show("Completed");
+        }
+
+
+
+
+        private void BtnConvert_Click(object sender, RoutedEventArgs e)
+        {
+            pbConvert.IsEnabled = true;
+            pbConvert.Maximum = _filesToConvert.Count + 1;
+            pbConvert.Value = 0;
+
+            _worker.RunWorkerAsync();
+
         }
 
         private void BtnChooseDir_Click(object sender, RoutedEventArgs e)
@@ -96,7 +154,6 @@ namespace CdwToPdf
             _filesToConvert.Clear();
 
             var path = dialog.SelectedPath;
-            System.Windows.MessageBox.Show(path);
 
             string[] files = cbSubdirs.IsChecked.GetValueOrDefault()
                 ? System.IO.Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
@@ -104,7 +161,7 @@ namespace CdwToPdf
 
             _filesToConvert = files
                 .Where(f => f.EndsWith("cdw") || f.EndsWith("spw"))
-                .Select(f => new FileInfo
+                .Select(f => new DrawingFileInfo
                 {
                     Path = f
                 })
@@ -112,15 +169,16 @@ namespace CdwToPdf
 
             foreach (var file in _filesToConvert)
             {
-   
-                FileStream fs = new FileStream(file.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                FileStream fs = new(file.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
                 CdwAnalyzer cdwAnalyzer = new(fs, file.Path);
 
                 if (!cdwAnalyzer.IsCompleted) continue;
 
-                file.Designation = cdwAnalyzer.FileInfo.Designation;
-                file.Name = cdwAnalyzer.FileInfo.Name;
-                file.DrawingType = cdwAnalyzer.FileInfo.DrawingType;
+                file.Designation = cdwAnalyzer.DrawingFileInfo.Designation;
+                file.Name = cdwAnalyzer.DrawingFileInfo.Name;
+                file.DrawingType = cdwAnalyzer.DrawingFileInfo.DrawingType;
+                file.IsAssemblyDrawing = cdwAnalyzer.DrawingFileInfo.IsAssemblyDrawing;
             }
 
 
@@ -128,14 +186,15 @@ namespace CdwToPdf
 
             //lbFiles.UpdateLayout();
 
-            _filesToConvert = _filesToConvert.OrderBy(f => f.Designation).ToList();
+            _filesToConvert = _filesToConvert.OrderBy(f => f.ToString()).ToList();
 
             foreach (var item in _filesToConvert)
             {
                 lbFiles.Items.Add(item.ToString());
             }
-                
-            System.Windows.MessageBox.Show(string.Join(Environment.NewLine, _filesToConvert));
+
+            //System.Windows.MessageBox.Show(string.Join(Environment.NewLine, _filesToConvert));
+            btnConvert.IsEnabled = true;
         }
 
         private void BtnChooseFile_Click(object sender, RoutedEventArgs e)
@@ -154,23 +213,26 @@ namespace CdwToPdf
 
             var path = dialog.FileName;
 
-            FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            CdwAnalyzer cdwAnalyzer = new CdwAnalyzer(file, path);
-           
+            FileStream file = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            CdwAnalyzer cdwAnalyzer = new(file, path);
 
 
-            _filesToConvert.Add(new FileInfo
+
+            _filesToConvert.Add(new DrawingFileInfo
             {
                 Path = path,
-                Name = cdwAnalyzer.FileInfo.Name,
-                Designation = cdwAnalyzer.FileInfo.Designation,
-                DrawingType = cdwAnalyzer.FileInfo.DrawingType
+                Name = cdwAnalyzer.DrawingFileInfo.Name,
+                Designation = cdwAnalyzer.DrawingFileInfo.Designation,
+                DrawingType = cdwAnalyzer.DrawingFileInfo.DrawingType,
+                IsAssemblyDrawing = cdwAnalyzer.DrawingFileInfo.IsAssemblyDrawing
             });
 
 
             lbFiles.Items.Clear();
 
             lbFiles.Items.Add(_filesToConvert.FirstOrDefault());
+
+            btnConvert.IsEnabled = true;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -194,34 +256,35 @@ namespace CdwToPdf
                     int selectItem = idx + offset;
 
                     (lb.Items[selectItem], lb.Items[idx]) = (lb.Items[idx], lb.Items[selectItem]);
-                    
+
                     lb.Focus();
                     lb.SelectedIndex = selectItem;
                 }
             }
         }
 
-        private void BtnUp_Click(object sender, EventArgs e) => 
+        private void BtnUp_Click(object sender, EventArgs e) =>
             MoveSelectedItemListBox(lbFiles, lbFiles.SelectedIndex, true);
-        
+
 
         private void BtnDown_Click(object sender, EventArgs e) =>
             MoveSelectedItemListBox(lbFiles, lbFiles.SelectedIndex, false);
-        
+
 
         private void BtnRemove_Click(object sender, EventArgs e)
         {
             int idx = lbFiles.SelectedIndex;
 
             lbFiles.Items.RemoveAt(idx);
+            _filesToConvert.RemoveAt(idx);
 
             lbFiles.Focus();
             lbFiles.SelectedIndex = idx;
         }
 
-        private void lbFiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void LbFiles_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var lb = sender as ListBox;
+            System.Windows.Controls.ListBox lb = (System.Windows.Controls.ListBox)sender;
             if (e.AddedItems.Count > 0)
             {
                 btnRemove.IsEnabled = true;

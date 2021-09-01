@@ -15,26 +15,41 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="500*"/>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
             <ColumnDefinition Width="50"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="350"></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
 
-        <Button x:Name="btnConvert" Content="Convert" HorizontalAlignment="Left" Margin="285,0,0,10" VerticalAlignment="Bottom" Click="BtnConvert_Click" IsEnabled="False" Grid.Row="1" Height="20" Width="46"/>
-        <Button x:Name="btnChooseDir" Content="Choose dir..." HorizontalAlignment="Left" Margin="10,335,0,10" VerticalAlignment="Bottom" Click="BtnChooseDir_Click" Width="100" Grid.Row="1" Height="20"/>
-        <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Left" Margin="10,301,0,45" VerticalAlignment="Bottom" Grid.Row="1" Height="15" Width="59"/>
-        <ListBox x:Name="lbFiles" Margin="0,0,3,70" Grid.RowSpan="2" ItemsSource="{Binding _filesToConvert}" SelectionChanged="lbFiles_SelectionChanged" />
-        <Button x:Name="btnChooseFile" Content="Choose file..." HorizontalAlignment="Left" Margin="150,335,0,10" VerticalAlignment="Bottom" Click="BtnChooseFile_Click" Width="100" Grid.Row="1" Height="20"/>
-        <Button x:Name="btnUp" HorizontalAlignment="Left" Margin="2,50,0,0" VerticalAlignment="Top" Width="40" Height="40" Grid.Column="1" IsEnabled="False" Click="BtnUp_Click">
-                <Image Source="/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
+        <ListBox x:Name="lbFiles" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" SelectionChanged="LbFiles_SelectionChanged" />
+        <Button x:Name="btnConvert" Content="Convert" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnConvert_Click" IsEnabled="False" Grid.Row="2"
+                Grid.Column="1" Height="20" Width="46"/>
+        <Button x:Name="btnChooseDir" Content="Choose dir..." HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Click="BtnChooseDir_Click" Width="100" Grid.Row="2"
+                Grid.Column="0" Height="20"/>
+        <Button x:Name="btnChooseFile" Content="Choose file..." HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Center" Click="BtnChooseFile_Click" Width="100" Grid.Row="2"
+                Grid.Column="0" Height="20"/>
+        <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="1"
+                  Grid.Column="0" Height="15" Width="59"/>
+        
+        <Button x:Name="btnUp" HorizontalAlignment="Center" Margin="0,50,0,0" VerticalAlignment="Top" Width="40" Height="40"
+                Grid.Row="0" Grid.Column="2" IsEnabled="False" Click="BtnUp_Click">
+            <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
         </Button>
-        <Button x:Name="btnRemove" HorizontalAlignment="Left" Margin="2,100,0,0" VerticalAlignment="Top" Width="40" Height="40" Grid.Column="1" IsEnabled="False" Click="BtnRemove_Click">
-            <Image Source="/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
+        <Button x:Name="btnRemove" HorizontalAlignment="Center" Margin="0,100,0,0" VerticalAlignment="Top" Width="40" Height="40"
+                Grid.Row="0" Grid.Column="2" IsEnabled="False" Click="BtnRemove_Click">
+            <Image Source="/Resources/Icons/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
         </Button>
-        <Button x:Name="btnDown" HorizontalAlignment="Left" Margin="2,150,0,0" VerticalAlignment="Top" Width="40" Height="40" Grid.Column="1" IsEnabled="False" Click="BtnDown_Click">
-            <Image Source="/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
+        <Button x:Name="btnDown" HorizontalAlignment="Center" Margin="0,150,0,0" VerticalAlignment="Top" Width="40" Height="40"
+                Grid.Row="0" Grid.Column="2" IsEnabled="False" Click="BtnDown_Click">
+            <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
         </Button>
+        <ProgressBar x:Name="pbConvert" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250" IsEnabled="False"/>
     </Grid>
 </Window>
