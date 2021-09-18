@@ -1,24 +1,25 @@
-﻿using CdwToPdf.Core;
-using CdwToPdf.Enums;
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Xml.Linq;
+using System.Xml.Serialization;
+using CdwToPdf.Core.ver20;
+using CdwToPdf.Enums;
 
-
-namespace CdwToPdf.Analyzer
+namespace CdwToPdf.Core.Analyzer
 {
     public class CdwAnalyzer
     {
         private XDocument _xDoc;
         private string str;
+        private Root _doc20;
 
         public bool Opened { get; private set; }
         public bool IsCompleted { get; private set; }
-        public DrawingFileInfo DrawingFileInfo { get; private set; } = new DrawingFileInfo();
+        public DrawingFileInfo DrawingFileInfo { get; private set; }
 
 
 
@@ -58,6 +59,10 @@ namespace CdwToPdf.Analyzer
             }
         }
 
+        private void DeserializeXml()
+        {
+
+        }
 
         private void RunParseCdw_MetaProductInfo()
         {
@@ -70,9 +75,10 @@ namespace CdwToPdf.Analyzer
                 ?.Element("product")
                 ?.Elements("document");
 
+            if (docSection == null) return;
 
             var isAssemblyDrawing = docSection
-                ?.Elements("property")
+                .Elements("property")
                 .FirstOrDefault(e => e.Attribute("id").Value == "marking")
                 ?.Elements("property")
                 .FirstOrDefault(e => e.Attribute("id").Value == "documentNumber")
@@ -82,7 +88,7 @@ namespace CdwToPdf.Analyzer
             DrawingFileInfo.IsAssemblyDrawing = isAssemblyDrawing;
 
             var name = docSection
-                ?.Elements("property")
+                .Elements("property")
                 .FirstOrDefault(e => e.Attribute("id").Value == "name")
                 ?.Attribute("value")
                 ?.Value;
@@ -173,6 +179,24 @@ namespace CdwToPdf.Analyzer
                 {
                     _xDoc = XDocument.Parse(s);
                 }
+                Opened = true;
+            }
+            catch
+            {
+                Opened = false;
+                IsCompleted = false;
+            }
+        }
+
+        private void LoadFromMemoryStream1(Stream ms)
+        {
+            Opened = false;
+            try
+            {
+                ms.Position = 0;
+                XmlSerializer formatter = new(typeof(Root));
+                _doc20 = (Root) formatter.Deserialize(ms);
+
                 Opened = true;
             }
             catch

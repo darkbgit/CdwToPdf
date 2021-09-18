@@ -3,9 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CdwToPdf"
+        xmlns:local="clr-namespace:CdwToPdf" 
+        xmlns:core="clr-namespace:CdwToPdf.Core"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="550" MinWidth="550" MinHeight="450" MaxHeight="450" Loaded="Window_Loaded">
+        Title="MainWindow" Height="460" Width="550" MinWidth="550" MinHeight="460" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="ImageDisabled" TargetType="Image">
             <Style.Triggers>
@@ -17,39 +18,96 @@
     </Window.Resources>
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition Width="50"/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="350"></RowDefinition>
             <RowDefinition></RowDefinition>
-            <RowDefinition></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <ListBox x:Name="lbFiles" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" SelectionChanged="LbFiles_SelectionChanged" />
-        <Button x:Name="btnConvert" Content="Convert" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnConvert_Click" IsEnabled="False" Grid.Row="2"
-                Grid.Column="1" Height="20" Width="46"/>
-        <Button x:Name="btnChooseDir" Content="Choose dir..." HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Click="BtnChooseDir_Click" Width="100" Grid.Row="2"
-                Grid.Column="0" Height="20"/>
-        <Button x:Name="btnChooseFile" Content="Choose file..." HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Center" Click="BtnChooseFile_Click" Width="100" Grid.Row="2"
-                Grid.Column="0" Height="20"/>
-        <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Grid.Row="1"
-                  Grid.Column="0" Height="15" Width="59"/>
-        
-        <Button x:Name="btnUp" HorizontalAlignment="Center" Margin="0,50,0,0" VerticalAlignment="Top" Width="40" Height="40"
-                Grid.Row="0" Grid.Column="2" IsEnabled="False" Click="BtnUp_Click">
-            <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
-        </Button>
-        <Button x:Name="btnRemove" HorizontalAlignment="Center" Margin="0,100,0,0" VerticalAlignment="Top" Width="40" Height="40"
-                Grid.Row="0" Grid.Column="2" IsEnabled="False" Click="BtnRemove_Click">
-            <Image Source="/Resources/Icons/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
-        </Button>
-        <Button x:Name="btnDown" HorizontalAlignment="Center" Margin="0,150,0,0" VerticalAlignment="Top" Width="40" Height="40"
-                Grid.Row="0" Grid.Column="2" IsEnabled="False" Click="BtnDown_Click">
-            <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
-        </Button>
-        <ProgressBar x:Name="pbConvert" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250" IsEnabled="False"/>
+
+
+
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <ListView x:Name="lvFiles" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0" SelectionChanged="LbFiles_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" >
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path}">Path</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding IsGoodName}"></GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Designation}">Обозначение</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Name}">Наименование</GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50"></RowDefinition>
+                    <RowDefinition Height="50"></RowDefinition>
+                    <RowDefinition Height="50"></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition Height="50"></RowDefinition>
+                    <RowDefinition Height="50"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Button x:Name="btnUp" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="40" Height="40"
+                        Grid.Row="0" IsEnabled="False" Click="BtnUp_Click">
+                    <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
+                </Button>
+                <Button x:Name="btnRemove" HorizontalAlignment="Left" Margin="10,0,0,5" VerticalAlignment="Bottom" Width="40" Height="40"
+                        Grid.Row="1" IsEnabled="False" Click="BtnRemove_Click">
+                    <Image Source="/Resources/Icons/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
+                </Button>
+                <Button x:Name="btnDown" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="40" Height="40"
+                        Grid.Row="2" IsEnabled="False" Click="BtnDown_Click">
+                    <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
+                </Button>
+
+                <Button x:Name="btnRename" Content="Rename" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnRename_Click" IsEnabled="False"
+                        Grid.Row="4" Height="20" />
+
+
+                <Button x:Name="btnConvert" Content="Convert To PDF" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnConvert_Click" IsEnabled="False"
+                        Grid.Row="5" Height="20" />
+
+
+            </Grid>
+
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="300"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
+                      Grid.Column="0" Height="15" Width="59"/>
+
+            <ProgressBar x:Name="pbConvert" Grid.Column="1" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250" IsEnabled="False"/>
+
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="btnChooseDir" Content="Choose dir..." HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Click="BtnChooseDir_Click" Width="100" 
+                    Grid.Column="0" Height="20"/>
+            <Button x:Name="btnChooseFile" Content="Choose file..." HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Click="BtnChooseFile_Click" Width="100"
+                    Grid.Column="1" Height="20"/>
+
+        </Grid>
+
+
     </Grid>
+
 </Window>
