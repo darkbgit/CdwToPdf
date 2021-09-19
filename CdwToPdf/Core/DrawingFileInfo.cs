@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Windows.Documents;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using CdwToPdf.Annotations;
 using CdwToPdf.Core.Analyzer;
@@ -117,50 +119,204 @@ namespace CdwToPdf.Core
             }
         }
 
+        public void RenameInZipFile()
+        {
+            bool isCompleted;
+            bool Opened = false;
+
+            //Root? _doc20 = new();
+
+            using var packageStream = new MemoryStream();
+
+            using FileStream fs = new(Path, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            fs.CopyTo(packageStream);
+            
+            packageStream.Position = 0;
+
+            using var zipPackage = new ZipArchive(packageStream, ZipArchiveMode.Update);
+
+            var infoEntry = zipPackage.GetEntry("MetaProductInfo");
+
+            if (infoEntry == null) return;
+
+            
+            //XmlSerializer formatter = new(typeof(Root));
+            //_doc20 = (Root?)formatter.Deserialize(infoEntry.Open());
+
+            XDocument xDoc;
+            using var reader = new StreamReader(infoEntry.Open());
+
+            xDoc = XDocument.Load(infoEntry.Open());
+
+            if (xDoc == null) return;
+
+
+            var docSection = xDoc
+                .Element("document")
+                ?.Element("product")
+                ?.Elements("document");
+
+            if (docSection == null) return;
+
+            var isAssemblyDrawing = docSection
+                .Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "marking")
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "documentNumber")
+                ?.Attribute("value")
+                ?.Value == "СБ";
+
+            var name = docSection
+                .Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "name")
+                ?.Attribute("value")
+                ?.Value;
+
+            if (name == null) return;
+            
+            name = name.Replace("@/", ". ");
+            if (isAssemblyDrawing)
+            {
+                name = name[..^18];
+            }
+
+            name = Regex.Replace(name, @"[\/?:*""><|]+", "", RegexOptions.Compiled);
+
+            var designation = docSection
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "marking")
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "base")
+                ?.Attribute("value")
+                ?.Value;
+
+            if (designation == null) return;
+
+            if (xDoc.Element("document")
+                .Element("product")
+                .Elements("document")
+                .Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "fullFileName")
+                .Attribute("value").Value != ToString())
+            {
+                xDoc.Element("document")
+                    .Element("product")
+                    .Elements("document")
+                    .Elements("property")
+                    .FirstOrDefault(e => e.Attribute("id").Value == "fullFileName")
+                    .Attribute("value").Value = ToString();
+            }
+
+
+            using var writer = new StreamWriter(infoEntry.Open());
+            writer.Write(xDoc.ToString());
+
+            packageStream.ToArray();
+
+            //zipPackage.CreateEntry();
+
+            
+        }
+
         public void RenameFile()
         {
             bool isCompleted;
             bool Opened = false;
 
-            Root? _doc20 = new();
-            Path = path;
+            //Root? _doc20 = new();
 
-            using FileStream fs = new(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var packageStream = new MemoryStream();
 
-            isCompleted = false;
+            using FileStream fs = new(Path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            var z = new ZFile();
-            if (!z.IsZip(fs)) return;
+            fs.CopyTo(packageStream);
 
-            z.ExtractFileToMemoryStream(fs, "MetaProductInfo");
+            packageStream.Position = 0;
 
-            if (z.OutputMemStream == null) return;
+            using var zipPackage = new ZipArchive(packageStream, ZipArchiveMode.Update);
 
-            var ms = z.OutputMemStream;
+            var infoEntry = zipPackage.GetEntry("MetaProductInfo");
 
-            try
+            if (infoEntry == null) return;
+
+
+            //XmlSerializer formatter = new(typeof(Root));
+            //_doc20 = (Root?)formatter.Deserialize(infoEntry.Open());
+
+            XDocument xDoc;
+            using var reader = new StreamReader(infoEntry.Open());
+
+            xDoc = XDocument.Load(reader);
+
+            if (xDoc == null) return;
+
+
+            var docSection = xDoc
+                .Element("document")
+                ?.Element("product")
+                ?.Elements("document");
+
+            if (docSection == null) return;
+
+            var isAssemblyDrawing = docSection
+                .Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "marking")
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "documentNumber")
+                ?.Attribute("value")
+                ?.Value == "СБ";
+
+            var name = docSection
+                .Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "name")
+                ?.Attribute("value")
+                ?.Value;
+
+            if (name == null) return;
+
+            name = name.Replace("@/", ". ");
+            if (isAssemblyDrawing)
             {
-                ms.Position = 0;
-                XmlSerializer formatter = new(typeof(Root));
-                _doc20 = (Root?)formatter.Deserialize(ms);
-                Opened = true;
-            }
-            catch
-            {
-                return;
+                name = name[..^18];
             }
 
-            if (_doc20 == null) return;
+            name = Regex.Replace(name, @"[\/?:*""><|]+", "", RegexOptions.Compiled);
 
-            try
+            var designation = docSection
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "marking")
+                ?.Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "base")
+                ?.Attribute("value")
+                ?.Value;
+
+            if (designation == null) return;
+
+            if (xDoc.Element("document")
+                .Element("product")
+                .Elements("document")
+                .Elements("property")
+                .FirstOrDefault(e => e.Attribute("id").Value == "fullFileName")
+                .Attribute("value").Value != ToString())
             {
-                AnalyzeRoot(_doc20);
+                xDoc.Element("document")
+                    .Element("product")
+                    .Elements("document")
+                    .Elements("property")
+                    .FirstOrDefault(e => e.Attribute("id").Value == "fullFileName")
+                    .Attribute("value").Value = ToString();
             }
-            catch
-            {
-                Opened = false;
-                isCompleted = false;
-            }
+
+
+            using var writer = new StreamWriter(infoEntry.Open());
+            writer.Write(xDoc.ToString());
+
+            packageStream.ToArray();
+
+            //zipPackage.CreateEntry();
+
+
         }
 
         public DrawingFileInfo()

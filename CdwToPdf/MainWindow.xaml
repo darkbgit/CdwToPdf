@@ -67,7 +67,7 @@
                     <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
                 </Button>
 
-                <Button x:Name="btnRename" Content="Rename" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnRename_Click" IsEnabled="False"
+                <Button x:Name="btnRename" Content="Rename" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnRename_Click"
                         Grid.Row="4" Height="20" />
 
 

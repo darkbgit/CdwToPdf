@@ -341,38 +341,13 @@ namespace CdwToPdf
                 }
                 var pdfFile = file.Path[..lastIndex] + file + ".pdf";
 
-                if (converter.Convert(file.Path, pdfFile, 0, false) == 0)
-                {
-                    MessageBox.Show($"Couldn't convert to pdf file {file.Path}");
-                }
+                file.RenameInZipFile();
 
-                using var pdfDoc = PdfReader.Open(pdfFile, PdfDocumentOpenMode.Import);
-                try
-                {
-                    for (var i = 0; i < pdfDoc.PageCount; i++)
-                    {
-                        targetDoc.AddPage(pdfDoc.Pages[i]);
-                    }
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show($"Couldn't add to pdf file {pdfFile}");
-                }
+                File.Move(file.Path, file.Path[..lastIndex] + file.ToString() + ".cdw");
 
 
-                pdfDoc.Close();
-
-                File.Delete(pdfFile);
-
-                _ = Dispatcher.Invoke(updProgress, RangeBase.ValueProperty, ++value);
             }
 
-
-            var path = _filesToConvert.First().Path
-                [..(_filesToConvert.First().Path.LastIndexOf('.') + 1)];
-            targetDoc.Save(path + "pdf");
-
-            MessageBox.Show("Completed");
         }
     }
 }

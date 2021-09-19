@@ -7,8 +7,15 @@
     <UseWPF>true</UseWPF>
 	  <UseWindowsForms>true</UseWindowsForms>
 	  <PackageIcon>1497559403-download_84987.ico</PackageIcon>
-	  <ApplicationIcon>C:\Prog\Icons\1497559403-download_84987.ico</ApplicationIcon>
+	  <ApplicationIcon>Resources\Icons\1497559403-download_84987.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Core\Renamer\**" />
+    <EmbeddedResource Remove="Core\Renamer\**" />
+    <None Remove="Core\Renamer\**" />
+    <Page Remove="Core\Renamer\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="angle-arrow-down_icon-icons.com_73683.png" />
@@ -26,6 +33,10 @@
       <Isolated>false</Isolated>
       <EmbedInteropTypes>true</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Icons\1497559403-download_84987.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -55,10 +66,6 @@
     <Resource Include="Resources\Icons\angle-arrow-down_icon-icons.com_73683.png" />
     <Resource Include="Resources\Icons\delete_delete_exit_1577.png" />
     <Resource Include="Resources\Icons\up-arrow_icon-icons.com_73351.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Core\Renamer\" />
   </ItemGroup>
 
 </Project>
