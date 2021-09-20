@@ -230,7 +230,7 @@ namespace CdwToPdf
 
             FileAnalyzer drawing = new FileAnalyzer(file, path);
 
-            MessageBox.Show($"{drawing.Drawing.Designation} - {drawing.Drawing.Name}\n{drawing.Drawing.Sheets}");
+            MessageBox.Show($"{drawing.Drawing.Designation} - {drawing.Drawing.Name}");
 
 
             //_filesToConvert.Add(new DrawingFileInfo
@@ -343,7 +343,7 @@ namespace CdwToPdf
 
                 file.RenameInZipFile();
 
-                File.Move(file.Path, file.Path[..lastIndex] + file.ToString() + ".cdw");
+                File.Move(file.Path, file.Path[..(lastIndex + 1)] + file.ToString() + ".cdw");
 
 
             }

@@ -40,6 +40,11 @@
                         <GridViewColumn DisplayMemberBinding="{Binding IsGoodName}"></GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Designation}">Обозначение</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Name}">Наименование</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding StampAuthor}">Разработал</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding CheckedBy}">Проверил</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding RateOfInspection}">Нормоконтроль</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Format}">Формат</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding SheetsNumber}">Кол-во листов</GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
