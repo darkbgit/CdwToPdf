@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CdwToPdf" 
         xmlns:core="clr-namespace:CdwToPdf.Core"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
-        Title="MainWindow" Height="460" Width="550" MinWidth="550" MinHeight="460" Loaded="Window_Loaded">
+        Title="MainWindow" Height="460" Width="800" MinWidth="650" MinHeight="460" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="ImageDisabled" TargetType="Image">
             <Style.Triggers>
@@ -33,11 +34,13 @@
                 <ColumnDefinition Width="150"></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
-            <ListView x:Name="lvFiles" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0" SelectionChanged="LbFiles_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" >
+            <ListView x:Name="lvFiles" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0" SelectionChanged="LbFiles_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" ItemsSource="{Binding Drawings}">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn DisplayMemberBinding="{Binding Path}">Path</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding IsGoodName}"></GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding AppVersion}">Версия</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding DrawingType}"></GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Designation}">Обозначение</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Name}">Наименование</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding StampAuthor}">Разработал</GridViewColumn>
@@ -73,7 +76,7 @@
                 </Button>
 
                 <Button x:Name="btnRename" Content="Rename" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnRename_Click"
-                        Grid.Row="4" Height="20" />
+                        Grid.Row="4" Height="20" IsEnabled="False" />
 
 
                 <Button x:Name="btnConvert" Content="Convert To PDF" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnConvert_Click" IsEnabled="False"
@@ -86,14 +89,20 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="100"></ColumnDefinition>
                 <ColumnDefinition Width="300"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
             <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
-                      Grid.Column="0" Height="15" Width="59"/>
+                      Grid.Column="0" Height="15"/>
+            <CheckBox x:Name="cbFullPath" Content="Full path" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
+                      Grid.Column="1" Height="15"/>
+            <CheckBox x:Name="cbWith3D" Content="With 3d files" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
+                      Grid.Column="2" Height="15"/>
 
-            <ProgressBar x:Name="pbConvert" Grid.Column="1" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250" IsEnabled="False"/>
+            <ProgressBar x:Name="pbConvert" Grid.Column="3" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250" IsEnabled="False"/>
 
         </Grid>
 

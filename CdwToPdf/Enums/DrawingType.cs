@@ -8,7 +8,10 @@ namespace CdwToPdf.Enums
 {
     public enum DrawingType
     {
+        Undefined = 0,
         Drawing = 1,
-        Specification = 5
+        Drawing3D = 4,
+        Specification = 5,
+        Assembly3D = 6
     }
 }

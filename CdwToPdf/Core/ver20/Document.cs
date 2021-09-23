@@ -9,10 +9,13 @@ namespace CdwToPdf.Core.ver20
     [XmlType(AnonymousType = true)]
     public class Document
     {
-        [XmlAttribute("id")]
-        public string Id { get; set; }
+        [XmlAttribute("prodCopy")]
+        public bool ProdCopy { get; set; }
 
         [XmlElement("property")]
         public List<Property> Properties { get; set; }
+
+        [XmlAttribute("id")]
+        public string Id { get; set; }
     }
 }

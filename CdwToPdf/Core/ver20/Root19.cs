@@ -7,7 +7,7 @@ namespace CdwToPdf.Core.ver20
     [System.ComponentModel.DesignerCategory("code")]
     [XmlType(AnonymousType = true)]
     [XmlRoot(Namespace = "", IsNullable = false, ElementName = "document")]
-    public class Root
+    public class Root19
     {
         [XmlElement("product")]
         public Product Product { get; set; }
