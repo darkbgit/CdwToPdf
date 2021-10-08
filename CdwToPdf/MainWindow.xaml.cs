@@ -99,9 +99,11 @@ namespace CdwToPdf
                 _ = Dispatcher.Invoke(updProgress, RangeBase.ValueProperty, ++value);
             }
 
-            var path = Drawings.First().Path
-                [..(Drawings.First().Path.LastIndexOf('.') + 1)];
-            targetDoc.Save(path + "pdf");
+            var first = Drawings.First();
+
+            var newFilepath = first.Path
+                [..(Drawings.First().Path.LastIndexOf('\\') + 1)] + first.Designation + " - " + first.Name;
+            targetDoc.Save(newFilepath + ".pdf");
 
             MessageBox.Show("Completed");
         }

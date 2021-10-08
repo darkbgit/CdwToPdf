@@ -349,8 +349,6 @@ namespace CdwToPdf.Core
             }
         }
 
-        
-
 
         //public event PropertyChangedEventHandler? PropertyChanged;
 
