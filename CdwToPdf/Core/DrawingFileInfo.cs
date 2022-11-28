@@ -234,7 +234,7 @@ namespace CdwToPdf.Core
             Root19 xmlDoc = AppVersion switch
             {
                 "16.0" or "16.1" or "18.0" => throw new Exception($"AppVersion - {AppVersion} not supported"),
-                "19.0" or "20.0" => DeserializeRoot19(),
+                "19.0" or "20.0" or "21.0" => DeserializeRoot19(),
                 _ => throw new Exception($"AppVersion - {AppVersion} undefined"),
             };
 

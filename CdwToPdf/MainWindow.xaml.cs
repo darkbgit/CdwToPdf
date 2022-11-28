@@ -28,7 +28,8 @@ namespace CdwToPdf
         public ObservableCollection<DrawingFileInfo> Drawings { get; private set; } = new();
 
         private const string KOMPAS_API = "KOMPAS.Application.7";
-        private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v20\Bin\Pdf2d.dll";
+        //private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v20\Bin\Pdf2d.dll";
+        private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v21\Bin\Pdf2d.dll";
 
         public MainWindow()
         {
