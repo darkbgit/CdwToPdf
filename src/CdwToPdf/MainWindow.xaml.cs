@@ -3,19 +3,17 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using CdwHelper.Core.Analyzers;
 using CdwHelper.Core.Converter;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
-using CdwToPdf.Models;
+using CdwHelper.WPF.Models;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
 namespace CdwHelper.WPF;
-
-internal delegate void UpdateProgressBarDelegate(DependencyProperty dp, object value);
 
 public partial class MainWindow : Window
 {
@@ -23,29 +21,75 @@ public partial class MainWindow : Window
     //private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v20\Bin\Pdf2d.dll";
     private const string KompasPathPdfConverter = @"C:\Program Files\ASCON\KOMPAS-3D v21\Bin\Pdf2d.dll";
 
-    private readonly BackgroundWorker _worker;
+    private readonly BackgroundWorker _convertWorker = new()
+    {
+        WorkerReportsProgress = true
+    };
+    private readonly BackgroundWorker _openWorker = new()
+    {
+        WorkerReportsProgress = true
+    };
 
     public MainWindow()
     {
         InitializeComponent();
-        _worker = new BackgroundWorker();
-        _worker.DoWork += Worker_DoWork;
+
+        _convertWorker.DoWork += ConvertWorkerDoWork;
+        _convertWorker.RunWorkerCompleted += ConvertWorker_RunWorkerCompleted;
+        _convertWorker.ProgressChanged += Worker_ProgressChanged;
+
+        _openWorker.DoWork += OpenWorkerDoWork;
+        _openWorker.RunWorkerCompleted += OpenWorker_RunWorkerCompleted;
+        _openWorker.ProgressChanged += Worker_ProgressChanged;
+
         DataContext = this;
     }
 
     public ObservableCollection<KompasDocument> Drawings { get; } = new();
 
-
-    private void Worker_DoWork(object? sender, DoWorkEventArgs e)
+    private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
     {
-        ConvertFiles();
+        pbConvert.Value = e.ProgressPercentage;
     }
 
-    private void ConvertFiles()
+    private void OpenWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
-        UpdateProgressBarDelegate updProgress = pbConvert.SetValue;
+        Drawings.Sort((a, b) => a.Marking.CompareTo(b.Marking));
 
-        double value = 0;
+        ChooseDirButton.IsEnabled = true;
+        ChooseFileButton.IsEnabled = true;
+        DrawingsToolBar.IsEnabled = true;
+        ConvertButton.IsEnabled = true;
+    }
+
+    private void ConvertWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
+    {
+        ChooseDirButton.IsEnabled = true;
+        ChooseFileButton.IsEnabled = true;
+        DrawingsToolBar.IsEnabled = true;
+    }
+
+    private void ConvertWorkerDoWork(object? sender, DoWorkEventArgs e)
+    {
+        if (sender is BackgroundWorker worker)
+        {
+            ConvertFiles(worker);
+        }
+    }
+
+    private void OpenWorkerDoWork(object? sender, DoWorkEventArgs e)
+    {
+        if (sender is BackgroundWorker worker)
+        {
+            AnalyzeFiles(worker, e.Argument as IEnumerable<string> ?? Array.Empty<string>());
+        }
+    }
+
+    private void ConvertFiles(BackgroundWorker worker)
+    {
+        if (!Drawings.Any()) return;
+
+        int value = 0;
 
         var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi);
 
@@ -55,8 +99,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _ = Dispatcher.Invoke(updProgress, RangeBase.ValueProperty, ++value);
-        if (!Drawings.Any()) return;
+        worker.ReportProgress(++value);
 
         using var targetDoc = new PdfDocument();
 
@@ -94,12 +137,12 @@ public partial class MainWindow : Window
 
             File.Delete(pdfFilePath);
 
-            _ = Dispatcher.Invoke(updProgress, RangeBase.ValueProperty, ++value);
+            worker.ReportProgress(++value);
         }
 
         if (targetDoc.PageCount == 0)
         {
-            Dispatcher.Invoke(updProgress, RangeBase.ValueProperty, ++value);
+            worker.ReportProgress(++value);
             MessageBox.Show("Pdf document have not any page. File don't saved.");
             return;
         }
@@ -113,19 +156,57 @@ public partial class MainWindow : Window
         MessageBox.Show("Completed");
     }
 
+    private void AnalyzeFiles(BackgroundWorker worker, IEnumerable<string> filesPaths)
+    {
+        int value = 0;
+
+        worker.ReportProgress(++value);
+
+        var errorList = new List<string>();
+
+        IFileAnalyzer fileAnalyzer = new FileAnalyzer();
+
+        foreach (var file in filesPaths)
+        {
+            try
+            {
+                var document = fileAnalyzer.Analyze(file);
+                Application.Current.Dispatcher.Invoke(delegate { Drawings.Add(document); });
+            }
+            catch (Exception exception)
+            {
+                errorList.Add(file + " " + exception.Message);
+            }
+
+            worker.ReportProgress(++value);
+        }
+
+        if (errorList.Any())
+        {
+            MessageBox.Show(string.Join(Environment.NewLine, errorList));
+        }
+    }
+
     private void BtnConvert_Click(object sender, RoutedEventArgs e)
     {
-        btnConvert.IsEnabled = false;
+        ChooseDirButton.IsEnabled = false;
+        ChooseFileButton.IsEnabled = false;
+        DrawingsToolBar.IsEnabled = false;
+        FilesListView.IsEnabled = false;
 
         pbConvert.IsEnabled = true;
-        pbConvert.Maximum = Drawings.Count + 1;
+        pbConvert.Maximum = Drawings.Count;
         pbConvert.Value = 0;
 
-        _worker.RunWorkerAsync();
+        _convertWorker.RunWorkerAsync();
     }
 
     private void BtnChooseDir_Click(object sender, RoutedEventArgs e)
     {
+        DrawingsToolBar.IsEnabled = false;
+        ChooseDirButton.IsEnabled = false;
+        ChooseFileButton.IsEnabled = false;
+
         using var dialog = new FolderBrowserDialog
         {
             Description = "Выберите папку",
@@ -133,7 +214,13 @@ public partial class MainWindow : Window
             //ShowNewFolderButton = true,
         };
 
-        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+        {
+            DrawingsToolBar.IsEnabled = true;
+            ChooseDirButton.IsEnabled = true;
+            ChooseFileButton.IsEnabled = true;
+            return;
+        }
 
         Drawings.Clear();
 
@@ -142,48 +229,24 @@ public partial class MainWindow : Window
         var fileExtensions = cbWith3D.IsChecked.HasValue && cbWith3D.IsChecked.Value
             ? new[] { "cdw", "spw", "m3d", "a3d" } : new[] { "cdw", "spw" };
 
-        List<string> files = (cbSubdirs.IsChecked.GetValueOrDefault()
-            ? Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
-            : Directory.GetFiles(path))
+        var files = (cbSubdirs.IsChecked.GetValueOrDefault()
+                ? Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
+                : Directory.GetFiles(path))
             .Where(f => fileExtensions.Contains(f[^3..]))
             .ToList();
 
-        var errorList = new List<string>();
+        pbConvert.IsEnabled = true;
+        pbConvert.Maximum = files.Count + 1;
+        pbConvert.Value = 0;
 
-        IFileAnalyzer fileAnalyzer = new FileAnalyzer();
-
-        foreach (var file in files)
-        {
-            try
-            {
-                Drawings.Add(fileAnalyzer.Analyze(file));
-            }
-            catch (Exception exception)
-            {
-                errorList.Add(file + " " + exception.Message);
-            }
-        }
-
-        Drawings.Sort((a, b) => a.Marking.CompareTo(b.Marking));
-
-        if (errorList.Any())
-        {
-            MessageBox.Show(string.Join(Environment.NewLine, errorList));
-        }
-
-        //Drawings = new ObservableCollection<DrawingFileInfo>(Drawings.OrderBy(f => f.Designation));
-
-        //lvFiles.ItemsSource = Drawings;
-
-        btnConvert.IsEnabled = true;
-        btnRename.IsEnabled = true;
+        _openWorker.RunWorkerAsync(files);
     }
 
     private void BtnChooseFile_Click(object sender, RoutedEventArgs e)
     {
         IFileAnalyzer analyzer = new FileAnalyzer();
 
-        using var dialog = new OpenFileDialog()
+        using var dialog = new OpenFileDialog
         {
             //Description = "Выберите папку",
             //UseDescriptionForTitle = true,
@@ -207,8 +270,8 @@ public partial class MainWindow : Window
 
         //lvFiles.ItemsSource = Drawings;
 
-        btnConvert.IsEnabled = true;
-        btnRename.IsEnabled = true;
+        ConvertButton.IsEnabled = true;
+        RenameButton.IsEnabled = true;
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -227,43 +290,42 @@ public partial class MainWindow : Window
             offset = moveUp ? -1 : 1;
         }
 
-        if (offset != 0)
-        {
-            int selectItem = idx + offset;
+        if (offset == 0) return;
 
-            //(lb.Items[selectItem], lb.Items[idx]) = (lb.Items[idx], lb.Items[selectItem]);
+        var selectItem = idx + offset;
 
-            (Drawings[selectItem], Drawings[idx]) = (Drawings[idx], Drawings[selectItem]);
+        //(lb.Items[selectItem], lb.Items[idx]) = (lb.Items[idx], lb.Items[selectItem]);
 
-            lv.Focus();
-            lv.SelectedIndex = selectItem;
-        }
+        (Drawings[selectItem], Drawings[idx]) = (Drawings[idx], Drawings[selectItem]);
+
+        lv.Focus();
+        lv.SelectedIndex = selectItem;
     }
 
     private void BtnUp_Click(object sender, EventArgs e) =>
-        MoveSelectedItemListBox(lvFiles, lvFiles.SelectedIndex, true);
+        MoveSelectedItemListBox(FilesListView, FilesListView.SelectedIndex, true);
 
 
     private void BtnDown_Click(object sender, EventArgs e) =>
-        MoveSelectedItemListBox(lvFiles, lvFiles.SelectedIndex, false);
+        MoveSelectedItemListBox(FilesListView, FilesListView.SelectedIndex, false);
 
 
     private void BtnRemove_Click(object sender, EventArgs e)
     {
-        int idx = lvFiles.SelectedIndex;
+        int idx = FilesListView.SelectedIndex;
 
         //lbFiles.Items.RemoveAt(idx);
         Drawings.RemoveAt(idx);
 
         if (!Drawings.Any())
         {
-            btnRename.IsEnabled = false;
-            btnConvert.IsEnabled = false;
+            RenameButton.IsEnabled = false;
+            ConvertButton.IsEnabled = false;
         }
         else
         {
-            lvFiles.Focus();
-            lvFiles.SelectedIndex = idx == Drawings.Count ? --idx : idx;
+            FilesListView.Focus();
+            FilesListView.SelectedIndex = idx == Drawings.Count ? --idx : idx;
         }
     }
 
@@ -272,17 +334,17 @@ public partial class MainWindow : Window
         System.Windows.Controls.ListView lv = (System.Windows.Controls.ListView)sender;
         if (e.AddedItems.Count > 0)
         {
-            btnRemove.IsEnabled = true;
+            RemoveButton.IsEnabled = true;
 
-            btnDown.IsEnabled = lv.SelectedIndex < Drawings.Count - 1;
+            DownButton.IsEnabled = lv.SelectedIndex < Drawings.Count - 1;
 
-            btnUp.IsEnabled = lv.SelectedIndex > 0;
+            UpButton.IsEnabled = lv.SelectedIndex > 0;
         }
         else
         {
-            btnRemove.IsEnabled = false;
-            btnUp.IsEnabled = false;
-            btnDown.IsEnabled = false;
+            RemoveButton.IsEnabled = false;
+            UpButton.IsEnabled = false;
+            DownButton.IsEnabled = false;
         }
     }
 

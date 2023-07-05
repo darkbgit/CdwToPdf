@@ -2,6 +2,7 @@
 
 public enum KompasVersion
 {
+    Undefined,
     V19,
     V20,
     V21,

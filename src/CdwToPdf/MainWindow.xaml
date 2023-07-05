@@ -19,27 +19,32 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="60"></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height="50"></RowDefinition>
         </Grid.RowDefinitions>
 
-
-
-
-        <Grid Grid.Row="0" Grid.Column="0">
+        <Grid Grid.Row="0">
+            <ToolBarPanel>
+                <ToolBarTray>
+                    <ToolBar Height="60" Width="100"/>
+                </ToolBarTray>
+            </ToolBarPanel>
+        </Grid>
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition></ColumnDefinition>
-                <ColumnDefinition Width="150"></ColumnDefinition>
+                <ColumnDefinition Width="50"></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
-            <ListView x:Name="lvFiles" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0"
+            <ListView x:Name="FilesListView" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0"
                       SelectionChanged="LbFiles_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" 
                       ItemsSource="{Binding Drawings, Mode=OneWay}">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn DisplayMemberBinding="{Binding FullFileName}">Path</GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding IsGoodName}"></GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding IsGoodFullFileName}"></GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding AppVersion}">Версия</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding DrawingType}"></GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Marking}">Обозначение</GridViewColumn>
@@ -54,40 +59,29 @@
             </ListView>
 
             <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="50"></RowDefinition>
-                    <RowDefinition Height="50"></RowDefinition>
-                    <RowDefinition Height="50"></RowDefinition>
-                    <RowDefinition></RowDefinition>
-                    <RowDefinition Height="50"></RowDefinition>
-                    <RowDefinition Height="50"></RowDefinition>
-                </Grid.RowDefinitions>
-
-                <Button x:Name="btnUp" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="40" Height="40"
-                        Grid.Row="0" IsEnabled="False" Click="BtnUp_Click">
-                    <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
-                </Button>
-                <Button x:Name="btnRemove" HorizontalAlignment="Left" Margin="10,0,0,5" VerticalAlignment="Bottom" Width="40" Height="40"
-                        Grid.Row="1" IsEnabled="False" Click="BtnRemove_Click">
-                    <Image Source="/Resources/Icons/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
-                </Button>
-                <Button x:Name="btnDown" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" Width="40" Height="40"
-                        Grid.Row="2" IsEnabled="False" Click="BtnDown_Click">
-                    <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
-                </Button>
-
-                <Button x:Name="btnRename" Content="Rename" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnRename_Click"
-                        Grid.Row="4" Height="20" IsEnabled="False" />
-
-
-                <Button x:Name="btnConvert" Content="Convert To PDF" HorizontalAlignment="Center" VerticalAlignment="Center" Click="BtnConvert_Click" IsEnabled="False"
-                        Grid.Row="5" Height="20" />
-
+                <ToolBarTray Orientation="Vertical">
+                    <ToolBar x:Name="DrawingsToolBar">
+                        <Button x:Name="UpButton" IsEnabled="False" Click="BtnUp_Click" Width="40">
+                            <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
+                        </Button>
+                        <Button x:Name="RemoveButton" IsEnabled="False" Click="BtnRemove_Click" Width="40">
+                            <Image Source="/Resources/Icons/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
+                        </Button>
+                        <Button x:Name="DownButton" IsEnabled="False" Click="BtnDown_Click" Width="40">
+                            <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
+                        </Button>
+                        <Button x:Name="RenameButton" Content="Edit" Click="BtnRename_Click" Height="40" Width="40"
+                                IsEnabled="False" />
+                        <Button x:Name="ConvertButton" Click="BtnConvert_Click" IsEnabled="False">
+                            <TextBlock>Save<LineBreak/>to Pdf</TextBlock>
+                        </Button>
+                    </ToolBar>
+                </ToolBarTray>
 
             </Grid>
 
         </Grid>
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100"></ColumnDefinition>
                 <ColumnDefinition Width="100"></ColumnDefinition>
@@ -106,8 +100,7 @@
             <ProgressBar x:Name="pbConvert" Grid.Column="3" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250" IsEnabled="False"/>
 
         </Grid>
-
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="150"></ColumnDefinition>
                 <ColumnDefinition Width="150"></ColumnDefinition>
@@ -115,14 +108,15 @@
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="btnChooseDir" Content="Choose dir..." HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Click="BtnChooseDir_Click" Width="100" 
-                    Grid.Column="0" Height="20"/>
-            <Button x:Name="btnChooseFile" Content="Choose file..." HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Click="BtnChooseFile_Click" Width="100"
-                    Grid.Column="1" Height="20"/>
-
+            <Button x:Name="ChooseDirButton" Content="Choose dir..."
+                    Grid.Column="0" Height="20" Width="100" 
+                    HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center"
+                    Click="BtnChooseDir_Click"  />
+            <Button x:Name="ChooseFileButton" Content="Choose file..."
+                    Grid.Column="1" Height="20" Width="100"
+                    HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center"
+                    Click="BtnChooseFile_Click" />
         </Grid>
-
-
     </Grid>
 
 </Window>

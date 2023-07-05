@@ -18,7 +18,7 @@ public class KompasDocument
     public string RateOfInspection { get; set; } = string.Empty;
     public string StampAuthor { get; set; } = string.Empty;
 
-
+    public bool IsGoodFullFileName { get; set; }
     //public bool IsGoodName =>
     //    Path.Split('\\').Last()[..^4] == Designation + " - " + Name;
 

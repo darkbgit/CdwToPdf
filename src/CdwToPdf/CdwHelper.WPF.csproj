@@ -9,6 +9,7 @@
 	  <PackageIcon>1497559403-download_84987.ico</PackageIcon>
 	  <ApplicationIcon>Resources\Icons\1497559403-download_84987.ico</ApplicationIcon>
 	  <ImplicitUsings>enable</ImplicitUsings>
+	  <AssemblyName>CdwHelper</AssemblyName>
   </PropertyGroup>
 
 	<ItemGroup>

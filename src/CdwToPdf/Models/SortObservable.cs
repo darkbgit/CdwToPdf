@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
-namespace CdwToPdf.Models;
+namespace CdwHelper.WPF.Models;
 
 public static class SortObservable
 {

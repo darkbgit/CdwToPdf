@@ -35,26 +35,22 @@ internal class ZipAnalyzer : IZipAnalyzer
 
     public Stream GetVersionPart()
     {
-        using (var packageStream = new MemoryStream())
+        using var packageStream = new MemoryStream();
+
+        using (FileStream fs = new(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
         {
-
-            using (FileStream fs = new(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                fs.CopyTo(packageStream);
-            }
-
-            packageStream.Position = 0;
-
-            using (var z = new ZipArchive(packageStream, ZipArchiveMode.Read))
-            {
-                var fileInfo = z.GetEntry("FileInfo")
-                    ?? throw new Exception("AppVersion couldn't find");
-
-                var result = CopyToStreamAndSetToBegin(fileInfo.Open());
-
-                return result;
-            }
+            fs.CopyTo(packageStream);
         }
+
+        packageStream.Position = 0;
+
+        using var zipArchive = new ZipArchive(packageStream, ZipArchiveMode.Read);
+        var fileInfo = zipArchive.GetEntry("FileInfo")
+                       ?? throw new Exception("AppVersion couldn't find");
+
+        var result = CopyToStreamAndSetToBegin(fileInfo.Open());
+
+        return result;
     }
 
     private static Stream CopyToStreamAndSetToBegin(Stream stream)
