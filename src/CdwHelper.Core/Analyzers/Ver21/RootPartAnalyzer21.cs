@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using CdwHelper.Core.Analyzers.Ver21.XmlModel;
@@ -103,6 +104,10 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
                 .FirstOrDefault(p => p.Id == "sheetsNumber")?.Value) : default,
         };
 
+        doc.Formats = ParseFormatSpecification(docSection.Properties.FirstOrDefault(p => p.Id == "format")?.Value,
+                doc.SheetsNumber)
+            .ToList();
+
         var name = docSection.Properties
             .FirstOrDefault(p => p.Id == "name")?.Value;
 
@@ -161,6 +166,9 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
                 .FirstOrDefault(p => p.Id == "sheetsNumber")?.Value != null ?
                 Convert.ToInt32(docSection.Properties
                 .FirstOrDefault(p => p.Id == "sheetsNumber")?.Value) : default,
+            Formats = ParseFormat2D(docSection.Properties
+                                      .FirstOrDefault(p => p.Id == "format")?.Value)
+                .ToList()
         };
 
         var name = docSection.Properties
@@ -215,6 +223,47 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
         return doc;
     }
 
+    private static IEnumerable<Format> ParseFormat2D(string? fullFormat)
+    {
+        if (string.IsNullOrEmpty(fullFormat))
+        {
+            yield break;
+        }
+
+        var formats = fullFormat.Split(',');
+
+        foreach (var format in formats)
+        {
+            var parts = format.Split('x');
+
+            switch (parts.Length)
+            {
+                case 1:
+                    if (Enum.TryParse<DrawingFormat>(parts.First(), out var formatCase1))
+                    {
+                        yield return new Format { DrawingFormat = formatCase1 };
+                    }
+                    break;
+                case 2:
+                    if (int.TryParse(parts.First(), NumberStyles.Integer, CultureInfo.CurrentCulture, out var number) &&
+                        Enum.TryParse<DrawingFormat>(parts.Last(), out var formatCase2))
+                    {
+                        yield return new Format { DrawingFormat = formatCase2, Count = number };
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static IEnumerable<Format> ParseFormatSpecification(string? fullFormat, int sheetsNumber)
+    {
+        if (string.IsNullOrEmpty(fullFormat) || !Enum.TryParse<DrawingFormat>(fullFormat, out var format))
+        {
+            return Enumerable.Empty<Format>();
+        }
+
+        return new List<Format> { new Format { DrawingFormat = format, SheetsCount = sheetsNumber } };
+    }
 
     //public void RenameInZipFile()
     //{

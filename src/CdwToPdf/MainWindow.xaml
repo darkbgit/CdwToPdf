@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CdwHelper.WPF" 
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        xmlns:viewModels="clr-namespace:CdwHelper.WPF.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="460" Width="800" MinWidth="650" MinHeight="460" Loaded="Window_Loaded">
+        Title="MainWindow" Height="500" Width="800" MinWidth="650" MinHeight="500" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="ImageDisabled" TargetType="Image">
             <Style.Triggers>
@@ -16,6 +17,9 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
+    <Window.DataContext>
+        <viewModels:DrawingsViewModel />
+    </Window.DataContext>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -40,7 +44,7 @@
 
             <ListView x:Name="FilesListView" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0"
                       SelectionChanged="LbFiles_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" 
-                      ItemsSource="{Binding Drawings, Mode=OneWay}">
+                      ItemsSource="{Binding Drawings}">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn DisplayMemberBinding="{Binding FullFileName}">Path</GridViewColumn>
@@ -53,6 +57,7 @@
                         <GridViewColumn DisplayMemberBinding="{Binding CheckedBy}">Проверил</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding RateOfInspection}">Нормоконтроль</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Format}">Формат</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding FormatsName}">ФорматN</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding SheetsNumber}">Кол-во листов</GridViewColumn>
                     </GridView>
                 </ListView.View>
@@ -74,6 +79,18 @@
                                 IsEnabled="False" />
                         <Button x:Name="ConvertButton" Click="BtnConvert_Click" IsEnabled="False">
                             <TextBlock>Save<LineBreak/>to Pdf</TextBlock>
+                        </Button>
+                        <Button x:Name="CalculateFormatsButton" Content="A4" Width="40" Height="40"
+                                Click="CalculateFormatsButton_OnClick">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Drawings.Count}" Value="0">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                         </Button>
                     </ToolBar>
                 </ToolBarTray>

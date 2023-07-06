@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +7,7 @@ using CdwHelper.Core.Converter;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
 using CdwHelper.WPF.Models;
+using CdwHelper.WPF.ViewModels;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 using Application = System.Windows.Application;
@@ -42,10 +42,10 @@ public partial class MainWindow : Window
         _openWorker.RunWorkerCompleted += OpenWorker_RunWorkerCompleted;
         _openWorker.ProgressChanged += Worker_ProgressChanged;
 
-        DataContext = this;
+        DataContext = new DrawingsViewModel();
     }
 
-    public ObservableCollection<KompasDocument> Drawings { get; } = new();
+    //public ObservableCollection<KompasDocument> Drawings { get; } = new();
 
     private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
     {
@@ -54,7 +54,7 @@ public partial class MainWindow : Window
 
     private void OpenWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
-        Drawings.Sort((a, b) => a.Marking.CompareTo(b.Marking));
+        ((DrawingsViewModel)DataContext).Drawings.Sort((a, b) => a.Marking.CompareTo(b.Marking));
 
         ChooseDirButton.IsEnabled = true;
         ChooseFileButton.IsEnabled = true;
@@ -87,7 +87,7 @@ public partial class MainWindow : Window
 
     private void ConvertFiles(BackgroundWorker worker)
     {
-        if (!Drawings.Any()) return;
+        if (!((DrawingsViewModel)DataContext).Drawings.Any()) return;
 
         int value = 0;
 
@@ -103,7 +103,10 @@ public partial class MainWindow : Window
 
         using var targetDoc = new PdfDocument();
 
-        foreach (var file in Drawings)
+        var files = ((DrawingsViewModel)DataContext).Drawings
+            .ToList();
+
+        foreach (var file in files)
         {
             var lastIndex = file.FullFileName.LastIndexOf('\\');
 
@@ -132,7 +135,6 @@ public partial class MainWindow : Window
                 MessageBox.Show($"Couldn't add to pdf file {pdfFilePath}");
             }
 
-
             pdfDoc.Close();
 
             File.Delete(pdfFilePath);
@@ -147,10 +149,10 @@ public partial class MainWindow : Window
             return;
         }
 
-        var first = Drawings.First();
+        var first = files.First();
 
         var newFilepath = first.FullFileName
-            [..(Drawings.First().FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
+            [..(first.FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
         targetDoc.Save(newFilepath + ".pdf");
 
         MessageBox.Show("Completed");
@@ -171,7 +173,7 @@ public partial class MainWindow : Window
             try
             {
                 var document = fileAnalyzer.Analyze(file);
-                Application.Current.Dispatcher.Invoke(delegate { Drawings.Add(document); });
+                Application.Current.Dispatcher.Invoke(delegate { ((DrawingsViewModel)DataContext).Drawings.Add(document); });
             }
             catch (Exception exception)
             {
@@ -195,7 +197,7 @@ public partial class MainWindow : Window
         FilesListView.IsEnabled = false;
 
         pbConvert.IsEnabled = true;
-        pbConvert.Maximum = Drawings.Count;
+        pbConvert.Maximum = ((DrawingsViewModel)DataContext).Drawings.Count;
         pbConvert.Value = 0;
 
         _convertWorker.RunWorkerAsync();
@@ -222,7 +224,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        Drawings.Clear();
+        ((DrawingsViewModel)DataContext).Drawings.Clear();
 
         var path = dialog.SelectedPath;
 
@@ -255,13 +257,13 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
 
-        Drawings.Clear();
+        ((DrawingsViewModel)DataContext).Drawings.Clear();
 
         var path = dialog.FileName;
 
         try
         {
-            Drawings.Add(analyzer.Analyze(path));
+            ((DrawingsViewModel)DataContext).Drawings.Add(analyzer.Analyze(path));
         }
         catch (Exception exception)
         {
@@ -281,7 +283,7 @@ public partial class MainWindow : Window
 
     private void MoveSelectedItemListBox(System.Windows.Controls.ListView lv, int idx, bool moveUp)
     {
-        if (Drawings.Count <= 1) return;
+        if (((DrawingsViewModel)DataContext).Drawings.Count <= 1) return;
 
         int offset = 0;
 
@@ -296,7 +298,7 @@ public partial class MainWindow : Window
 
         //(lb.Items[selectItem], lb.Items[idx]) = (lb.Items[idx], lb.Items[selectItem]);
 
-        (Drawings[selectItem], Drawings[idx]) = (Drawings[idx], Drawings[selectItem]);
+        (((DrawingsViewModel)DataContext).Drawings[selectItem], ((DrawingsViewModel)DataContext).Drawings[idx]) = (((DrawingsViewModel)DataContext).Drawings[idx], ((DrawingsViewModel)DataContext).Drawings[selectItem]);
 
         lv.Focus();
         lv.SelectedIndex = selectItem;
@@ -315,9 +317,9 @@ public partial class MainWindow : Window
         int idx = FilesListView.SelectedIndex;
 
         //lbFiles.Items.RemoveAt(idx);
-        Drawings.RemoveAt(idx);
+        ((DrawingsViewModel)DataContext).Drawings.RemoveAt(idx);
 
-        if (!Drawings.Any())
+        if (!((DrawingsViewModel)DataContext).Drawings.Any())
         {
             RenameButton.IsEnabled = false;
             ConvertButton.IsEnabled = false;
@@ -325,7 +327,7 @@ public partial class MainWindow : Window
         else
         {
             FilesListView.Focus();
-            FilesListView.SelectedIndex = idx == Drawings.Count ? --idx : idx;
+            FilesListView.SelectedIndex = idx == ((DrawingsViewModel)DataContext).Drawings.Count ? --idx : idx;
         }
     }
 
@@ -336,7 +338,7 @@ public partial class MainWindow : Window
         {
             RemoveButton.IsEnabled = true;
 
-            DownButton.IsEnabled = lv.SelectedIndex < Drawings.Count - 1;
+            DownButton.IsEnabled = lv.SelectedIndex < ((DrawingsViewModel)DataContext).Drawings.Count - 1;
 
             UpButton.IsEnabled = lv.SelectedIndex > 0;
         }
@@ -350,7 +352,7 @@ public partial class MainWindow : Window
 
     private void BtnRename_Click(object sender, RoutedEventArgs e)
     {
-        if (!Drawings.Any()) return;
+        if (!((DrawingsViewModel)DataContext).Drawings.Any()) return;
 
         //foreach (var file in Drawings.Where(f => !f.IsGoodName))
         //{
@@ -366,5 +368,28 @@ public partial class MainWindow : Window
 
         //    File.Move(file.Path, file.Path[..(lastIndex + 1)] + file.ToString() + ".cdw");
         //}
+    }
+
+    private void CalculateFormatsButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        GetFormats(((DrawingsViewModel)DataContext).Drawings);
+    }
+
+    private static void GetFormats(IEnumerable<KompasDocument> documents)
+    {
+        if (!documents.Any())
+        {
+            MessageBox.Show("No drawings.");
+            return;
+        }
+
+        var result = documents
+            .SelectMany(d => d.Formats)
+            .GroupBy(f => f.DrawingFormat)
+            .OrderByDescending(f => f.Key)
+            .Select(g => new { Format = g.Key, Count = g.Sum(f => f.Count * f.SheetsCount) })
+            .ToList();
+
+        MessageBox.Show(string.Join(Environment.NewLine, result.Select(i => $"{i.Format} - {i.Count}")));
     }
 }

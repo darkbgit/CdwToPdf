@@ -17,8 +17,11 @@ public class KompasDocument
     public string Name { get; set; } = string.Empty;
     public string RateOfInspection { get; set; } = string.Empty;
     public string StampAuthor { get; set; } = string.Empty;
+    public IEnumerable<Format> Formats { get; set; } = Enumerable.Empty<Format>();
 
     public bool IsGoodFullFileName { get; set; }
+
+    public string FormatsName => string.Join(", ", Formats);
     //public bool IsGoodName =>
     //    Path.Split('\\').Last()[..^4] == Designation + " - " + Name;
 

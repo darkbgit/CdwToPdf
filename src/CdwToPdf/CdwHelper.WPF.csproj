@@ -52,4 +52,8 @@
     <Resource Include="Resources\Icons\up-arrow_icon-icons.com_73351.png" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
+  </ItemGroup>
+
 </Project>
