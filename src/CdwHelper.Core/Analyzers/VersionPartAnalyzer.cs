@@ -5,9 +5,9 @@ namespace CdwHelper.Core.Analyzers;
 
 internal class VersionPartAnalyzer : IVersionPartAnalyzer
 {
-    private const string FileType = "FileType=";
-    private const string appVersion = "AppVersion=KOMPAS_";
-    private const char newline = '\n';
+    private const string FileTypeName = "FileType=";
+    private const string AppVersionName = "AppVersion=KOMPAS_";
+    private const char Newline = '\n';
     private readonly Stream _xmlStream;
 
     public VersionPartAnalyzer(Stream xmlStream)
@@ -26,11 +26,11 @@ internal class VersionPartAnalyzer : IVersionPartAnalyzer
         var stream = CopyToStreamAndSetToBegin(_xmlStream);
 
         using var reader = new StreamReader(stream);
-        var info = reader.ReadToEnd().Split(newline);
+        var info = reader.ReadToEnd().Split(Newline);
 
         var version = info
-            .FirstOrDefault(s => s.Contains(appVersion))
-            ?[appVersion.Length..];
+            .FirstOrDefault(s => s.Contains(AppVersionName))
+            ?[AppVersionName.Length..];
 
         if (string.IsNullOrEmpty(version))
             throw new Exception("Couldn't get Kompas version in which file was created.");
@@ -50,14 +50,14 @@ internal class VersionPartAnalyzer : IVersionPartAnalyzer
     {
         var stream = CopyToStreamAndSetToBegin(_xmlStream);
 
-        using (var reader = new StreamReader(stream))
-        {
-            var info = reader.ReadToEnd().Split(newline);
+        using var reader = new StreamReader(stream);
 
-            if (int.TryParse(info.FirstOrDefault(s => s.Contains(FileType))?[^1].ToString(), out int type))
-            {
-                return (DocType)type;
-            }
+        var info = reader.ReadToEnd()
+            .Split(Newline);
+
+        if (Enum.TryParse<DocType>(info.FirstOrDefault(s => s.Contains(FileTypeName))?[^1].ToString(), out var type))
+        {
+            return type;
         }
 
         throw new Exception("Couldn't get Kompas file type.");

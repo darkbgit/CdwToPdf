@@ -10,7 +10,7 @@ using HtmlAgilityPack;
 
 namespace CdwHelper.Core.Analyzers.Ver21;
 
-internal class RootPartAnalyzer21 : IRootPartAnalyzer
+internal partial class RootPartAnalyzer21 : IRootPartAnalyzer
 {
     public KompasDocument AnalyzeXml(Stream xml, DocType type)
     {
@@ -21,7 +21,7 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
 
         var root = Deserialize(xml);
 
-        KompasDocument? doc = type switch
+        var doc = type switch
         {
             DocType.Drawing => Analyze2D(root),
             DocType.Specification => AnalyzeSpecification(root),
@@ -95,9 +95,9 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
             RateOfInspection = docSection.Properties
                 .FirstOrDefault(p => p.Id == "rateOfInspection")?.Value
                 ?? string.Empty,
-            Format = docSection.Properties
-                .FirstOrDefault(p => p.Id == "format")?.Value
-                ?? string.Empty,
+            //Format = docSection.Properties
+            //    .FirstOrDefault(p => p.Id == "format")?.Value
+            //    ?? string.Empty,
             SheetsNumber = docSection.Properties
                 .FirstOrDefault(p => p.Id == "sheetsNumber")?.Value != null ?
                 Convert.ToInt32(docSection.Properties
@@ -119,7 +119,7 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
             //    name = name[..^18];
             //}
 
-            name = Regex.Replace(name, @"[\/?:*""><|]+", "", RegexOptions.Compiled);
+            name = ReplaceRegex().Replace(name, string.Empty);
 
             doc.Name = name;
         }
@@ -159,9 +159,9 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
             RateOfInspection = docSection.Properties
                 .FirstOrDefault(p => p.Id == "rateOfInspection")?.Value
                 ?? string.Empty,
-            Format = docSection.Properties
-                .FirstOrDefault(p => p.Id == "format")?.Value
-                ?? string.Empty,
+            //Format = docSection.Properties
+            //    .FirstOrDefault(p => p.Id == "format")?.Value
+            //    ?? string.Empty,
             SheetsNumber = docSection.Properties
                 .FirstOrDefault(p => p.Id == "sheetsNumber")?.Value != null ?
                 Convert.ToInt32(docSection.Properties
@@ -182,7 +182,7 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
             //    name = name[..^18];
             //}
 
-            name = Regex.Replace(name, @"[\/?:*""><|]+", "", RegexOptions.Compiled);
+            name = ReplaceRegex().Replace(name, string.Empty);
 
             doc.Name = name;
         }
@@ -264,6 +264,9 @@ internal class RootPartAnalyzer21 : IRootPartAnalyzer
 
         return new List<Format> { new Format { DrawingFormat = format, SheetsCount = sheetsNumber } };
     }
+
+    [GeneratedRegex("[\\/?:*\"><|]+", RegexOptions.Compiled)]
+    private static partial Regex ReplaceRegex();
 
     //public void RenameInZipFile()
     //{

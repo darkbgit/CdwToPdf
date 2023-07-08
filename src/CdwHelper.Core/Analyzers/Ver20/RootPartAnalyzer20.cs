@@ -7,24 +7,24 @@ using CdwHelper.Core.Models;
 
 namespace CdwHelper.Core.Analyzers.Ver20;
 
-internal class RootPartAnalyzer20 : IRootPartAnalyzer
+internal partial class RootPartAnalyzer20 : IRootPartAnalyzer
 {
     public KompasDocument AnalyzeXml(Stream xml, DocType type)
     {
-        var root = Deserilyze(xml);
+        var root = Deserialize(xml);
 
-        KompasDocument? doc = type switch
+        var doc = type switch
         {
             DocType.Drawing or DocType.Specification => Analyze2D19(root),
             DocType.Part3D or DocType.Assembly3D => Analyze3D19(root),
             _ => throw new Exception($"Unsupported drawing type {type}."),
         }
-            ?? throw new Exception($"Couldn't analyze root part.");
+                  ?? throw new Exception("Couldn't analyze root part.");
 
         return doc;
     }
 
-    private Root19 Deserilyze(Stream xml)
+    private static Root19 Deserialize(Stream xml)
     {
         try
         {
@@ -64,9 +64,9 @@ internal class RootPartAnalyzer20 : IRootPartAnalyzer
             RateOfInspection = docSection.Properties
                 .FirstOrDefault(p => p.Id == "rateOfInspection")?.Value
                 ?? string.Empty,
-            Format = docSection.Properties
-                .FirstOrDefault(p => p.Id == "format")?.Value
-                ?? string.Empty,
+            //Format = docSection.Properties
+            //    .FirstOrDefault(p => p.Id == "format")?.Value
+            //    ?? string.Empty,
             SheetsNumber = docSection.Properties
                 .FirstOrDefault(p => p.Id == "sheetsNumber")?.Value != null ?
                 Convert.ToInt32(docSection.Properties
@@ -84,7 +84,7 @@ internal class RootPartAnalyzer20 : IRootPartAnalyzer
                 name = name[..^18];
             }
 
-            name = Regex.Replace(name, @"[\/?:*""><|]+", "", RegexOptions.Compiled);
+            name = ReplaceRegex().Replace(name, string.Empty);
 
             doc.Name = name;
         }
@@ -118,9 +118,9 @@ internal class RootPartAnalyzer20 : IRootPartAnalyzer
             RateOfInspection = docSection.Properties
                 .FirstOrDefault(p => p.Id == "rateOfInspection")?.Value
                 ?? string.Empty,
-            Format = docSection.Properties
-                .FirstOrDefault(p => p.Id == "format")?.Value
-                ?? string.Empty,
+            //Format = docSection.Properties
+            //    .FirstOrDefault(p => p.Id == "format")?.Value
+            //    ?? string.Empty,
             SheetsNumber = docSection.Properties
                 .FirstOrDefault(p => p.Id == "sheetsNumber")?.Value != null ?
                 Convert.ToInt32(docSection.Properties
@@ -139,13 +139,16 @@ internal class RootPartAnalyzer20 : IRootPartAnalyzer
                 name = name[..^18];
             }
 
-            name = Regex.Replace(name, @"[\/?:*""><|]+", "", RegexOptions.Compiled);
+            name = ReplaceRegex().Replace(name, string.Empty);
 
             doc.Name = name;
         }
 
         return doc;
     }
+
+    [GeneratedRegex("[\\/?:*\"><|]+", RegexOptions.Compiled)]
+    private static partial Regex ReplaceRegex();
 
     //private Root19 DeserializeRoot19()
     //{

@@ -8,8 +8,6 @@ using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
 using CdwHelper.WPF.Models;
 using CdwHelper.WPF.ViewModels;
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
@@ -17,10 +15,6 @@ namespace CdwHelper.WPF;
 
 public partial class MainWindow : Window
 {
-    private const string KompasApi = "KOMPAS.Application.7";
-    //private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v20\Bin\Pdf2d.dll";
-    private const string KompasPathPdfConverter = @"C:\Program Files\ASCON\KOMPAS-3D v21\Bin\Pdf2d.dll";
-
     private readonly BackgroundWorker _convertWorker = new()
     {
         WorkerReportsProgress = true
@@ -29,6 +23,8 @@ public partial class MainWindow : Window
     {
         WorkerReportsProgress = true
     };
+
+    private readonly IPdfConverter _pdfConverter = new PdfConverter();
 
     public MainWindow()
     {
@@ -45,8 +41,6 @@ public partial class MainWindow : Window
         DataContext = new DrawingsViewModel();
     }
 
-    //public ObservableCollection<KompasDocument> Drawings { get; } = new();
-
     private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
     {
         pbConvert.Value = e.ProgressPercentage;
@@ -55,25 +49,53 @@ public partial class MainWindow : Window
     private void OpenWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
         ((DrawingsViewModel)DataContext).Drawings.Sort((a, b) => a.Marking.CompareTo(b.Marking));
+        ((DrawingsViewModel)DataContext).CheckMarkings();
+
+        MessageBox.Show("Done");
 
         ChooseDirButton.IsEnabled = true;
         ChooseFileButton.IsEnabled = true;
         DrawingsToolBar.IsEnabled = true;
         ConvertButton.IsEnabled = true;
+        pbConvert.Visibility = Visibility.Hidden;
     }
 
     private void ConvertWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
+        MessageBox.Show("Done");
+
         ChooseDirButton.IsEnabled = true;
         ChooseFileButton.IsEnabled = true;
         DrawingsToolBar.IsEnabled = true;
+        FilesListView.IsEnabled = true;
+        pbConvert.Visibility = Visibility.Hidden;
     }
 
     private void ConvertWorkerDoWork(object? sender, DoWorkEventArgs e)
     {
-        if (sender is BackgroundWorker worker)
+        if (sender is not BackgroundWorker worker) return;
+
+        var drawings = new List<KompasDocument>();
+
+        Application.Current.Dispatcher.Invoke(() =>
         {
-            ConvertFiles(worker);
+            drawings = ((DrawingsViewModel)DataContext).Drawings.ToList();
+        });
+
+        if (!drawings.Any()) return;
+
+        try
+        {
+            var errors = _pdfConverter.ConvertFiles(drawings, worker).ToList();
+
+            if (errors.Any())
+            {
+                MessageBox.Show(string.Join(Environment.NewLine, errors));
+            }
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(exception.Message);
         }
     }
 
@@ -85,82 +107,82 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ConvertFiles(BackgroundWorker worker)
-    {
-        if (!((DrawingsViewModel)DataContext).Drawings.Any()) return;
+    //private void ConvertFiles(BackgroundWorker worker)
+    //{
+    //    if (!((DrawingsViewModel)DataContext).Drawings.Any()) return;
 
-        int value = 0;
+    //    int value = 0;
 
-        var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi);
+    //    var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi);
 
-        if (converter == null)
-        {
-            MessageBox.Show("Couldn't create Kompas converter.");
-            return;
-        }
+    //    if (converter == null)
+    //    {
+    //        MessageBox.Show("Couldn't create Kompas converter.");
+    //        return;
+    //    }
 
-        worker.ReportProgress(++value);
+    //    worker.ReportProgress(++value);
 
-        using var targetDoc = new PdfDocument();
+    //    using var targetDoc = new PdfDocument();
 
-        var files = ((DrawingsViewModel)DataContext).Drawings
-            .ToList();
+    //    var files = ((DrawingsViewModel)DataContext).Drawings
+    //        .ToList();
 
-        foreach (var file in files)
-        {
-            var lastIndex = file.FullFileName.LastIndexOf('\\');
+    //    foreach (var file in files)
+    //    {
+    //        var lastIndex = file.FullFileName.LastIndexOf('\\');
 
-            if (lastIndex == -1)
-            {
-                MessageBox.Show($"Wrong path for file {file.FullFileName}");
-                continue;
-            }
-            var pdfFilePath = file.FullFileName[..(lastIndex + 1)] + file + ".pdf";
+    //        if (lastIndex == -1)
+    //        {
+    //            MessageBox.Show($"Wrong path for file {file.FullFileName}");
+    //            continue;
+    //        }
+    //        var pdfFilePath = file.FullFileName[..(lastIndex + 1)] + file + ".pdf";
 
-            if (converter.Convert(file.FullFileName, pdfFilePath, 0, false) == 0)
-            {
-                MessageBox.Show($"Couldn't convert to pdf file {file.FullFileName}");
-            }
+    //        if (converter.Convert(file.FullFileName, pdfFilePath, 0, false) == 0)
+    //        {
+    //            MessageBox.Show($"Couldn't convert to pdf file {file.FullFileName}");
+    //        }
 
-            using var pdfDoc = PdfReader.Open(pdfFilePath, PdfDocumentOpenMode.Import);
-            try
-            {
-                for (var i = 0; i < pdfDoc.PageCount; i++)
-                {
-                    targetDoc.AddPage(pdfDoc.Pages[i]);
-                }
-            }
-            catch (Exception)
-            {
-                MessageBox.Show($"Couldn't add to pdf file {pdfFilePath}");
-            }
+    //        using var pdfDoc = PdfReader.Open(pdfFilePath, PdfDocumentOpenMode.Import);
+    //        try
+    //        {
+    //            for (var i = 0; i < pdfDoc.PageCount; i++)
+    //            {
+    //                targetDoc.AddPage(pdfDoc.Pages[i]);
+    //            }
+    //        }
+    //        catch (Exception)
+    //        {
+    //            MessageBox.Show($"Couldn't add to pdf file {pdfFilePath}");
+    //        }
 
-            pdfDoc.Close();
+    //        pdfDoc.Close();
 
-            File.Delete(pdfFilePath);
+    //        File.Delete(pdfFilePath);
 
-            worker.ReportProgress(++value);
-        }
+    //        worker.ReportProgress(++value);
+    //    }
 
-        if (targetDoc.PageCount == 0)
-        {
-            worker.ReportProgress(++value);
-            MessageBox.Show("Pdf document have not any page. File don't saved.");
-            return;
-        }
+    //    if (targetDoc.PageCount == 0)
+    //    {
+    //        worker.ReportProgress(++value);
+    //        MessageBox.Show("Pdf document have not any page. File don't saved.");
+    //        return;
+    //    }
 
-        var first = files.First();
+    //    var first = files.First();
 
-        var newFilepath = first.FullFileName
-            [..(first.FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
-        targetDoc.Save(newFilepath + ".pdf");
+    //    var newFilePath = first.FullFileName
+    //        [..(first.FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
+    //    targetDoc.Save(newFilePath + ".pdf");
 
-        MessageBox.Show("Completed");
-    }
+    //    MessageBox.Show("Completed");
+    //}
 
     private void AnalyzeFiles(BackgroundWorker worker, IEnumerable<string> filesPaths)
     {
-        int value = 0;
+        var value = 0;
 
         worker.ReportProgress(++value);
 
@@ -197,6 +219,7 @@ public partial class MainWindow : Window
         FilesListView.IsEnabled = false;
 
         pbConvert.IsEnabled = true;
+        pbConvert.Visibility = Visibility.Visible;
         pbConvert.Maximum = ((DrawingsViewModel)DataContext).Drawings.Count;
         pbConvert.Value = 0;
 
@@ -238,6 +261,7 @@ public partial class MainWindow : Window
             .ToList();
 
         pbConvert.IsEnabled = true;
+        pbConvert.Visibility = Visibility.Visible;
         pbConvert.Maximum = files.Count + 1;
         pbConvert.Value = 0;
 
@@ -270,22 +294,15 @@ public partial class MainWindow : Window
             MessageBox.Show(exception.Message);
         }
 
-        //lvFiles.ItemsSource = Drawings;
-
         ConvertButton.IsEnabled = true;
         RenameButton.IsEnabled = true;
-    }
-
-    private void Window_Loaded(object sender, RoutedEventArgs e)
-    {
-        //lbFiles.ItemsSource = _filesToConvert;
     }
 
     private void MoveSelectedItemListBox(System.Windows.Controls.ListView lv, int idx, bool moveUp)
     {
         if (((DrawingsViewModel)DataContext).Drawings.Count <= 1) return;
 
-        int offset = 0;
+        var offset = 0;
 
         if (idx >= 0)
         {
@@ -295,8 +312,6 @@ public partial class MainWindow : Window
         if (offset == 0) return;
 
         var selectItem = idx + offset;
-
-        //(lb.Items[selectItem], lb.Items[idx]) = (lb.Items[idx], lb.Items[selectItem]);
 
         (((DrawingsViewModel)DataContext).Drawings[selectItem], ((DrawingsViewModel)DataContext).Drawings[idx]) = (((DrawingsViewModel)DataContext).Drawings[idx], ((DrawingsViewModel)DataContext).Drawings[selectItem]);
 
@@ -316,7 +331,6 @@ public partial class MainWindow : Window
     {
         int idx = FilesListView.SelectedIndex;
 
-        //lbFiles.Items.RemoveAt(idx);
         ((DrawingsViewModel)DataContext).Drawings.RemoveAt(idx);
 
         if (!((DrawingsViewModel)DataContext).Drawings.Any())
@@ -377,13 +391,15 @@ public partial class MainWindow : Window
 
     private static void GetFormats(IEnumerable<KompasDocument> documents)
     {
-        if (!documents.Any())
+        var kompasDocuments = documents.ToList();
+
+        if (!kompasDocuments.Any())
         {
             MessageBox.Show("No drawings.");
             return;
         }
 
-        var result = documents
+        var result = kompasDocuments
             .SelectMany(d => d.Formats)
             .GroupBy(f => f.DrawingFormat)
             .OrderByDescending(f => f.Key)

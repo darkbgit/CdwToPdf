@@ -1,6 +1,6 @@
-﻿using KompasAPI7;
+﻿using System.Text;
+using KompasAPI7;
 using Pdf2d_LIBRARY;
-using System.Text;
 
 namespace CdwHelper.Core.Converter;
 
@@ -19,7 +19,7 @@ public class DrawingConverterFactory
 
         if (iConverter != null)
         {
-            IPdf2dParam param = (IPdf2dParam)iConverter.ConverterParameters(0);
+            var param = (IPdf2dParam)iConverter.ConverterParameters(0);
             //param.OnlyThinLine = true;
         }
 

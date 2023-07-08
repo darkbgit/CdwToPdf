@@ -15,7 +15,8 @@ internal class RootPartAnalyzerFactory
             KompasVersion.V20 => new RootPartAnalyzer20(),
             KompasVersion.V21 => new RootPartAnalyzer21(),
             KompasVersion.V22 => throw new NotImplementedException(),
-            _ => throw new NotImplementedException(),
+            KompasVersion.Undefined => throw new InvalidOperationException(),
+            _ => throw new InvalidOperationException(),
         };
 
         return rootPartAnalyzer;

@@ -6,9 +6,11 @@
         xmlns:local="clr-namespace:CdwHelper.WPF" 
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:viewModels="clr-namespace:CdwHelper.WPF.ViewModels"
+        xmlns:models="clr-namespace:CdwHelper.Core.Models;assembly=CdwHelper.Core"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="800" MinWidth="650" MinHeight="500" Loaded="Window_Loaded">
+        Title="MainWindow" Height="500" Width="800" MinWidth="650" MinHeight="500">
     <Window.Resources>
+        <models:KompasDocument x:Key="KompasDocument"/>
         <Style x:Key="ImageDisabled" TargetType="Image">
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
@@ -44,22 +46,72 @@
 
             <ListView x:Name="FilesListView" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0"
                       SelectionChanged="LbFiles_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Auto" 
-                      ItemsSource="{Binding Drawings}">
+                      ItemsSource="{Binding Path=Drawings}">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Style.Triggers>
+                            <!--<DataTrigger Binding="{Binding IsGoodFormats}" Value="false">
+                                <Setter Property="Background" Value="Red" />
+                            </DataTrigger>-->
+                            <!--<DataTrigger Binding="{Binding IsGoodMarking}" Value="false">
+                                <Setter Property="Background" Value="Red" />
+                            </DataTrigger>-->
+                        </Style.Triggers>
+                    </Style>
+                    
+                </ListView.ItemContainerStyle>
+
                 <ListView.View>
                     <GridView>
                         <GridViewColumn DisplayMemberBinding="{Binding FullFileName}">Path</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding IsGoodFullFileName}"></GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding AppVersion}">Версия</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding DrawingType}"></GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Marking}">Обозначение</GridViewColumn>
+                        <GridViewColumn Header="Обозначение">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type models:KompasDocument}">
+                                   <TextBlock x:Name="MarkingTextBlock" Text="{ Binding Marking}"></TextBlock>
+                                   <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsGoodMarking}" Value="false">
+                                            <Setter TargetName="MarkingTextBlock" Property="Background" Value="Red" />
+                                            <Setter TargetName="MarkingTextBlock" Property="ToolTip" Value="Проверьте обозначения" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type models:KompasDocument}">
+                                    <TextBlock x:Name="AssemblyTextBlock"></TextBlock>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsAssemblyDrawing}" Value="true">
+                                            <Setter TargetName="AssemblyTextBlock" Property="Text" Value="СБ" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding Name}">Наименование</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding StampAuthor}">Разработал</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding CheckedBy}">Проверил</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding RateOfInspection}">Нормоконтроль</GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding Format}">Формат</GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding FormatsName}">ФорматN</GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding FormatsName}" Header="Формат">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type models:KompasDocument}">
+                                    <TextBlock x:Name="MarkingTextBlock" Text="{ Binding Formats}"></TextBlock>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsGoodFormats}" Value="false">
+                                            <Setter TargetName="MarkingTextBlock" Property="Background" Value="Red" />
+                                            <Setter TargetName="MarkingTextBlock" Property="ToolTip" Value="Некоректный формат" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding SheetsNumber}">Кол-во листов</GridViewColumn>
                     </GridView>
+                    
                 </ListView.View>
             </ListView>
 
@@ -114,7 +166,8 @@
             <CheckBox x:Name="cbWith3D" Content="With 3d files" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
                       Grid.Column="2" Height="15"/>
 
-            <ProgressBar x:Name="pbConvert" Grid.Column="3" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250" IsEnabled="False"/>
+            <ProgressBar x:Name="pbConvert" Grid.Column="3" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250"
+                         IsEnabled="False" Visibility="Hidden"/>
 
         </Grid>
         <Grid Grid.Row="3">

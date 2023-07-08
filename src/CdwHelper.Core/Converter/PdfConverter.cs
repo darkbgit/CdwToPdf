@@ -1,41 +1,55 @@
-﻿using CdwHelper.Core.Models;
+﻿using System.ComponentModel;
+using CdwHelper.Core.Enums;
+using CdwHelper.Core.Interfaces;
+using CdwHelper.Core.Models;
+using PdfSharp;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
 namespace CdwHelper.Core.Converter;
 
-internal class PdfConverter
+public class PdfConverter : IPdfConverter
 {
-    private const string KOMPAS_API = "KOMPAS.Application.7";
-    //private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v20\Bin\Pdf2d.dll";
-    private const string KOMPAS_PATH_PDF_CONVERTER = @"C:\Program Files\ASCON\KOMPAS-3D v21\Bin\Pdf2d.dll";
-    private const string PDF_EXTENSION = ".pdf";
+    private const string KompasApi = "KOMPAS.Application.7";
+    private const string KompasPathPdfConverter = @"C:\Program Files\ASCON\KOMPAS-3D v21\Bin\Pdf2d.dll";
+    private const string PdfExtension = ".pdf";
 
-    private void ConvertFiles(IEnumerable<KompasDocument> documents)
+    public IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents, BackgroundWorker worker,
+        DrawingFormat format = DrawingFormat.All)
     {
-        if (!documents.Any())
-            return;
+        var errors = new List<string>();
+        int value = 0;
 
-        var converter = DrawingConverterFactory.GetConverter(KOMPAS_PATH_PDF_CONVERTER, KOMPAS_API)
+        var kompasDocuments = documents.ToList();
+
+        //if (!kompasDocuments.Any())
+        //    return;
+
+        var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi)
             ?? throw new Exception("Couldn't create Kompas converter.");
+
+        worker.ReportProgress(++value);
 
         using var targetDoc = new PdfDocument();
 
-        foreach (var file in documents)
+        foreach (var file in kompasDocuments)
         {
+            if (!file.Formats.Any(f => format.HasFlag(f.DrawingFormat))) continue;
+
             var lastIndex = file.FullFileName.LastIndexOf('\\');
 
             if (lastIndex == -1)
             {
-                //MessageBox.Show($"Wrong path for file {file.Path}");
+                errors.Add($"Wrong path for file {file.FullFileName}");
                 continue;
             }
 
-            var pdfFilePath = file.FullFileName[..(lastIndex + 1)] + file.FileName + ".pdf";
+            var pdfFilePath = file.FullFileName[..(lastIndex + 1)] + file.Name + PdfExtension;
 
             if (converter.Convert(file.FullFileName, pdfFilePath, 0, false) == 0)
             {
-                //MessageBox.Show($"Couldn't convert to pdf file {file.Path}");
+                errors.Add($"Couldn't convert to pdf file {file.FullFileName}");
+                continue;
             }
 
             using var pdfDoc = PdfReader.Open(pdfFilePath, PdfDocumentOpenMode.Import);
@@ -43,26 +57,48 @@ internal class PdfConverter
             {
                 for (var i = 0; i < pdfDoc.PageCount; i++)
                 {
+                    var format = GetPageFormat(pdfDoc.Pages[i].Width.Millimeter, pdfDoc.Pages[i].Height.Millimeter, pdfDoc.Pages[i].Orientation);
                     targetDoc.AddPage(pdfDoc.Pages[i]);
                 }
             }
             catch (Exception)
             {
-                //MessageBox.Show($"Couldn't add to pdf file {pdfFilePath}");
+                errors.Add($"Couldn't add to pdf file {pdfFilePath}");
             }
-
 
             pdfDoc.Close();
 
             File.Delete(pdfFilePath);
+
+            worker.ReportProgress(++value);
         }
 
-        var first = documents.First();
+        if (targetDoc.PageCount == 0)
+        {
+            worker.ReportProgress(++value);
+            throw new Exception("Pdf document have not any page. File don't saved.");
+        }
+
+        var first = kompasDocuments.First();
 
         var newFilepath = first.FullFileName
-            [..(documents.First().FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
-        targetDoc.Save(newFilepath + ".pdf");
+            [..(kompasDocuments.First().FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
+        targetDoc.Save(newFilepath + PdfExtension);
 
-        //MessageBox.Show("Completed");
+        return errors;
+    }
+
+    private static DrawingFormat GetPageFormat(double width, double height, PageOrientation orientation)
+    {
+        (int height, int width) a4PortraitSize = (297, 214);
+
+        if (orientation == PageOrientation.Portrait)
+        {
+            if (width is > (a4PortraitSize.width - 2) and < a4PortraitSize.width + 2)
+            {
+                return DrawingFormat.A4;
+            }
+        }
+        return DrawingFormat.Undefined;
     }
 }
