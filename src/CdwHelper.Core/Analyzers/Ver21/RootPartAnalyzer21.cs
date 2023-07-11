@@ -27,9 +27,11 @@ internal partial class RootPartAnalyzer21 : IRootPartAnalyzer
             DocType.Specification => AnalyzeSpecification(root),
             DocType.Part3D or DocType.Assembly3D => Analyze3D(root),
             _ => throw new Exception($"Unsupported drawing type {type}."),
-        };
+        } ?? throw new Exception("Couldn't analyze root part.");
 
-        return doc ?? throw new Exception("Couldn't analyze root part.");
+        doc.DrawingType = type;
+
+        return doc;
     }
 
     private static void CleanXmlStreamFromDuplicateAttributes(Stream stream)

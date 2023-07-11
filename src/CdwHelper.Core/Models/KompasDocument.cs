@@ -16,13 +16,13 @@ public class KompasDocument : INotifyPropertyChanged
     public string CheckedBy { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public string FullFileName { get; set; } = string.Empty;
-    //public string Format { get; set; } = string.Empty;
     public string Marking { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string RateOfInspection { get; set; } = string.Empty;
     public string StampAuthor { get; set; } = string.Empty;
     public IEnumerable<Format> Formats { get; set; } = Enumerable.Empty<Format>();
     public string FormatsName => string.Join(", ", Formats);
+    public bool IsGoodFullFileName { get; set; }
 
     public bool IsGoodMarking
     {
@@ -33,8 +33,6 @@ public class KompasDocument : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-
-    public bool IsGoodFullFileName { get; set; }
 
     public bool IsGoodFormats =>
         DrawingType switch

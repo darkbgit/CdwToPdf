@@ -10,6 +10,7 @@
 	  <ApplicationIcon>Resources\Icons\1497559403-download_84987.ico</ApplicationIcon>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <AssemblyName>CdwHelper</AssemblyName>
+	  <StartupObject>CdwHelper.WPF.Program</StartupObject>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -32,7 +33,9 @@
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
     <PackageReference Include="PDFsharpNetStandard2" Version="1.51.4845" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
@@ -55,7 +58,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Helpers\" />
     <Folder Include="ViewModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="options.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

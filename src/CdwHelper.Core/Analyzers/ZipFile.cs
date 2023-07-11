@@ -1,52 +1,68 @@
 ﻿using System.IO.Compression;
-using CdwHelper.Core.Interfaces;
+using CdwHelper.Core.Exceptions;
 
 namespace CdwHelper.Core.Analyzers;
 
-internal class ZipAnalyzer : IZipAnalyzer
+internal class ZipFile
 {
     private readonly string _filePath;
 
-    public ZipAnalyzer(string filePath)
+    public ZipFile(string filePath)
     {
         _filePath = filePath;
     }
 
-    public Stream GetRootPart()
+    public Stream GetRootPartStream()
     {
+        const string rootEntryName = "MetaProductInfo";
+
         using var packageStream = new MemoryStream();
 
-        using (FileStream fs = new(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        try
         {
+            using FileStream fs = new(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             fs.CopyTo(packageStream);
         }
+        catch (IOException e)
+        {
+            throw new AnalyzeException(e.Message);
+        }
+
 
         packageStream.Position = 0;
 
         using var z = new ZipArchive(packageStream, ZipArchiveMode.Read);
 
-        var infoEntry = z.GetEntry("MetaProductInfo")
-            ?? throw new Exception("ZipFile entry not found.");
+        var infoEntry = z.GetEntry(rootEntryName)
+            ?? throw new AnalyzeException("ZipFile entry not found.");
 
         var result = CopyToStreamAndSetToBegin(infoEntry.Open());
 
         return result;
     }
 
-    public Stream GetVersionPart()
+    public Stream GetVersionPartStream()
     {
+        const string fileInfoEntryName = "FileInfo";
+
         using var packageStream = new MemoryStream();
 
-        using (FileStream fs = new(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        try
         {
+            using FileStream fs = new(_filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             fs.CopyTo(packageStream);
         }
+        catch (IOException e)
+        {
+            throw new AnalyzeException(e.Message);
+        }
+
 
         packageStream.Position = 0;
 
         using var zipArchive = new ZipArchive(packageStream, ZipArchiveMode.Read);
-        var fileInfo = zipArchive.GetEntry("FileInfo")
-                       ?? throw new Exception("AppVersion couldn't find");
+        var fileInfo = zipArchive.GetEntry(fileInfoEntryName)
+                       ?? throw new AnalyzeException("AppVersion couldn't find");
 
         var result = CopyToStreamAndSetToBegin(fileInfo.Open());
 

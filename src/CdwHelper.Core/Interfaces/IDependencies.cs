@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace CdwHelper.Core.DI;
+namespace CdwHelper.Core.Interfaces;
 
 public interface IDependencies
 {

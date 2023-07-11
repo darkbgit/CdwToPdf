@@ -1,0 +1,6 @@
+{
+  "PdfOptions": {
+    "KompasAPI": "KOMPAS.Application.7",
+    "PathToPdf2d": "C:\\Program Files\\ASCON\\KOMPAS-3D v21\\Bin\\Pdf2d.dll"
+  }
+}

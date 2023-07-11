@@ -2,6 +2,7 @@
 using CdwHelper.Core.Enums;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
+using Microsoft.Extensions.Options;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
@@ -9,9 +10,15 @@ namespace CdwHelper.Core.Converter;
 
 internal class PdfConverter : IPdfConverter
 {
-    private const string KompasApi = "KOMPAS.Application.7";
-    private const string KompasPathPdfConverter = @"C:\Program Files\ASCON\KOMPAS-3D v21\Bin\Pdf2d.dll";
+    //private readonly string _kompasApi;
+    //private readonly string _pathToKompasPdfConverter;
+    private readonly IOptionsMonitor<PdfOptions> _pdfOptionsMonitor;
     private const string PdfExtension = ".pdf";
+
+    public PdfConverter(IOptionsMonitor<PdfOptions> pdfOptionsMonitor)
+    {
+        _pdfOptionsMonitor = pdfOptionsMonitor;
+    }
 
     public IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents,
         DrawingFormat format = DrawingFormat.All)
@@ -30,7 +37,10 @@ internal class PdfConverter : IPdfConverter
         //if (!kompasDocuments.Any())
         //    return;
 
-        var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi)
+        var pathToKompasPdfConverter = _pdfOptionsMonitor.CurrentValue.PathToPdf2d;
+        var kompasApi = _pdfOptionsMonitor.CurrentValue.KompasAPI;
+
+        var converter = DrawingConverterFactory.GetConverter(pathToKompasPdfConverter, kompasApi)
             ?? throw new Exception("Couldn't create Kompas converter.");
 
         worker?.ReportProgress(++progressValue);
@@ -168,6 +178,4 @@ internal class PdfConverter : IPdfConverter
     {
         return value > (defaultValue - accuracy) && value < (defaultValue + accuracy);
     }
-
-
 }

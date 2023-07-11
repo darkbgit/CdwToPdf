@@ -11,6 +11,7 @@ public class DependenciesForCore : IDependencies
     {
         services.AddTransient<IFileAnalyzer, FileAnalyzer>();
 
+
         services.AddTransient<IPdfConverter, PdfConverter>();
     }
 }

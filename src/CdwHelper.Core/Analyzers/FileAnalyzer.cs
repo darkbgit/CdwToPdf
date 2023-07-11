@@ -7,20 +7,19 @@ internal class FileAnalyzer : IFileAnalyzer
 {
     public KompasDocument Analyze(string filePath)
     {
-        IZipAnalyzer zip = new ZipAnalyzer(filePath);
+        var zipFile = new ZipFile(filePath);
 
-        using var versionPart = zip.GetVersionPart();
+        using var versionPartStream = zipFile.GetVersionPartStream();
 
-        IVersionPartAnalyzer versionPartAnalyzer = new VersionPartAnalyzer(versionPart);
+        var versionPart = new VersionPart(versionPartStream);
 
-        IRootPartAnalyzer rootPartAnalyzer = RootPartAnalyzerFactory.GetRootAnalyzer(versionPartAnalyzer.AppVersion);
+        IRootPartAnalyzer rootPartAnalyzer = RootPartAnalyzerFactory.GetRootAnalyzer(versionPart.AppVersion);
 
-        using var rootPart = zip.GetRootPart();
+        using var rootPart = zipFile.GetRootPartStream();
 
-        var document = rootPartAnalyzer.AnalyzeXml(rootPart, versionPartAnalyzer.DocType);
+        var document = rootPartAnalyzer.AnalyzeXml(rootPart, versionPart.DocType);
 
-        document.DrawingType = versionPartAnalyzer.DocType;
-        document.AppVersion = versionPartAnalyzer.AppVersion;
+        document.AppVersion = versionPart.AppVersion;
 
         document.IsGoodFullFileName = document.FullFileName == filePath;
 

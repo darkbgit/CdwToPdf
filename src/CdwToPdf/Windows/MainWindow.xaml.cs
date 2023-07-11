@@ -4,14 +4,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using CdwHelper.Core.Enums;
+using CdwHelper.Core.Exceptions;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
+using CdwHelper.WPF.Helpers;
 using CdwHelper.WPF.Models;
 using CdwHelper.WPF.ViewModels;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 
-namespace CdwHelper.WPF;
+namespace CdwHelper.WPF.Windows;
 
 public partial class MainWindow : Window
 {
@@ -26,11 +28,13 @@ public partial class MainWindow : Window
 
     private readonly IPdfConverter _pdfConverter;
     private readonly IFileAnalyzer _fileAnalyzer;
+    private readonly IWindowFactory _windowFactory;
 
-    public MainWindow(IPdfConverter pdfConverter, IFileAnalyzer fileAnalyzer)
+    public MainWindow(IPdfConverter pdfConverter, IFileAnalyzer fileAnalyzer, IWindowFactory windowFactory)
     {
         _pdfConverter = pdfConverter;
         _fileAnalyzer = fileAnalyzer;
+        _windowFactory = windowFactory;
 
         InitializeComponent();
 
@@ -132,7 +136,7 @@ public partial class MainWindow : Window
                 var document = _fileAnalyzer.Analyze(file);
                 Application.Current.Dispatcher.Invoke(delegate { ((DrawingsViewModel)DataContext).Drawings.Add(document); });
             }
-            catch (Exception exception)
+            catch (AnalyzeException exception)
             {
                 errorList.Add(file + " " + exception.Message);
             }
@@ -384,12 +388,12 @@ public partial class MainWindow : Window
 
     private void SaveToPdfButton_OnClick(object sender, RoutedEventArgs e)
     {
-        SaveToPdfPopup.IsOpen = true;
+        SaveToPdfPopup.IsOpen = !SaveToPdfPopup.IsOpen;
 
-        SaveToPdfPopup.Closed += (senderClosed, eClosed) =>
-        {
-            SaveToPdfButton.IsChecked = false;
-        };
+        //SaveToPdfPopup.Closed += (senderClosed, eClosed) =>
+        //{
+        //    SaveToPdfButton.IsChecked = false;
+        //};
     }
 
     private void SaveToPdfPopup_Click(object sender, RoutedEventArgs e)
@@ -398,5 +402,17 @@ public partial class MainWindow : Window
         {
             popup.IsOpen = false;
         }
+    }
+
+    private void SaveToPdfPopup_OnClosed(object? sender, EventArgs e)
+    {
+        SaveToPdfButton.IsChecked = false;
+    }
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var settingsWindow = _windowFactory.Create<SettingsWindow>();
+
+        settingsWindow?.ShowDialog();
     }
 }

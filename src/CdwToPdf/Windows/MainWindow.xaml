@@ -1,4 +1,4 @@
-﻿<Window x:Class="CdwHelper.WPF.MainWindow"
+﻿<Window x:Class="CdwHelper.WPF.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -24,24 +24,26 @@
     </Window.DataContext>
 
     <Grid>
+        <Grid.Resources>
+            <Style x:Name="ButtonAsToolbar" x:Key="ButtonAsToolbar" TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"></Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
-            <RowDefinition Height="60"></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height="50"></RowDefinition>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
-            <ToolBarPanel>
-                <ToolBarTray>
-                    <ToolBar Height="60" Width="100"/>
-                </ToolBarTray>
-            </ToolBarPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Settings" Margin="10, 0, 0, 0"
+                        Style="{StaticResource ResourceKey=ButtonAsToolbar}" Click="SettingsButton_Click"></Button>
+            </StackPanel>
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition></ColumnDefinition>
-                <ColumnDefinition Width="50"></ColumnDefinition>
+                <ColumnDefinition Width="60"></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
             <ListView x:Name="FilesListView" Margin="0,0,3,0" Grid.Row="0" Grid.Column="0"
@@ -111,14 +113,13 @@
                         </GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding SheetsNumber}">Кол-во листов</GridViewColumn>
                     </GridView>
-                    
                 </ListView.View>
             </ListView>
 
             <Grid Grid.Column="1">
-                <ToolBarTray Orientation="Vertical">
-                    <ToolBar x:Name="DrawingsToolBar">
-                        <ToolBar.Resources>
+                <StackPanel x:Name="DrawingsToolBar" Orientation="Vertical">
+                    <!--<ToolBar x:Name="DrawingsToolBar">-->
+                        <StackPanel.Resources>
                             <Style TargetType="{x:Type Popup}">
                                 <Setter Property="StaysOpen" Value="False"></Setter>
                                 <EventSetter Event="Button.Click" Handler="SaveToPdfPopup_Click"></EventSetter>
@@ -127,7 +128,7 @@
                                 <Setter Property="Background" Value="{StaticResource {x:Static SystemColors.MenuBrushKey}}"></Setter>
                             </Style>
                             <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"></Style>
-                        </ToolBar.Resources>
+                        </StackPanel.Resources>
                         <Button x:Name="UpButton" IsEnabled="False" Click="BtnUp_Click" Width="40">
                             <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
                         </Button>
@@ -139,19 +140,24 @@
                         </Button>
                         <Button x:Name="RenameButton" Content="Edit" Click="BtnRename_Click" Height="40" Width="40"
                                 IsEnabled="False" />
-                        <ToggleButton Name="SaveToPdfButton" Click="SaveToPdfButton_OnClick" IsEnabled="False">
+                        <ToggleButton Name="SaveToPdfButton" Click="SaveToPdfButton_OnClick" Height="40" Width="40"
+                                      IsEnabled="False">
+                            <ToggleButton.Style>
+                            <Style TargetType="ToggleButton" BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"></Style>
+                            </ToggleButton.Style>
                             <TextBlock>Save<LineBreak/>to Pdf</TextBlock>
                         </ToggleButton>
-                        <Popup x:Name="SaveToPdfPopup" PlacementTarget="{Binding ElementName=SaveToPdfButton}">
+                        <Popup x:Name="SaveToPdfPopup" PlacementTarget="{Binding ElementName=SaveToPdfButton}" Placement="Left" VerticalAlignment="Center"
+                               Closed="SaveToPdfPopup_OnClosed">
                             <Border>
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Content="All" Click="ConvertAllButton_OnClick"></Button>
-                                    <Separator />
-                                    <Button Content="A0" Click="ConvertA0Button_OnClick" />
-                                    <Button Content="A1" Click="ConvertA1Button_OnClick" />
-                                    <Button Content="A2" Click="ConvertA2Button_OnClick" />
-                                    <Button Content="A3" Click="ConvertA3Button_OnClick" />
-                                    <Button Content="A4" Click="ConvertA4Button_OnClick" />
+                                    <Button Content="All" Click="ConvertAllButton_OnClick" Height="30" Width="30" />
+                                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+                                <Button Content="A0" Height="30" Width="30" Click="ConvertA0Button_OnClick" />
+                                <Button Content="A1" Height="30" Width="30" Click="ConvertA1Button_OnClick" />
+                                <Button Content="A2" Height="30" Width="30" Click="ConvertA2Button_OnClick" />
+                                <Button Content="A3" Height="30" Width="30" Click="ConvertA3Button_OnClick" />
+                                <Button Content="A4" Height="30" Width="30" Click="ConvertA4Button_OnClick" />
                                 </StackPanel>
                             </Border>
                         </Popup>
@@ -159,7 +165,7 @@
                         <Button x:Name="CalculateFormatsButton" Content="A4" Width="40" Height="40"
                                 Click="CalculateFormatsButton_OnClick">
                             <Button.Style>
-                                <Style TargetType="Button">
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Drawings.Count}" Value="0">
                                             <Setter Property="IsEnabled" Value="False" />
@@ -168,8 +174,7 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-                    </ToolBar>
-                </ToolBarTray>
+                    </StackPanel>
 
             </Grid>
 

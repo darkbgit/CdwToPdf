@@ -1,25 +1,24 @@
 ﻿using CdwHelper.Core.Enums;
-using CdwHelper.Core.Interfaces;
 
 namespace CdwHelper.Core.Analyzers;
 
-internal class VersionPartAnalyzer : IVersionPartAnalyzer
+internal class VersionPart
 {
     private const string FileTypeName = "FileType=";
     private const string AppVersionName = "AppVersion=KOMPAS_";
     private const char Newline = '\n';
     private readonly Stream _xmlStream;
 
-    public VersionPartAnalyzer(Stream xmlStream)
+    public VersionPart(Stream xmlStream)
     {
         _xmlStream = xmlStream;
         AppVersion = GetAppVersion();
         DocType = GetDocType();
     }
 
-    public KompasVersion AppVersion { get; init; }
+    public KompasVersion AppVersion { get; }
 
-    public DocType DocType { get; init; }
+    public DocType DocType { get; }
 
     private KompasVersion GetAppVersion()
     {
