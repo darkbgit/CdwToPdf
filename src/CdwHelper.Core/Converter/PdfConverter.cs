@@ -2,7 +2,6 @@
 using CdwHelper.Core.Enums;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
-using PdfSharp;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 
@@ -21,10 +20,10 @@ internal class PdfConverter : IPdfConverter
     }
 
     public IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents, BackgroundWorker? worker,
-        DrawingFormat format = DrawingFormat.All)
+        DrawingFormat formatsToConvert = DrawingFormat.All)
     {
         var errors = new List<string>();
-        int value = 0;
+        int progressValue = 0;
 
         var kompasDocuments = documents.ToList();
 
@@ -34,19 +33,24 @@ internal class PdfConverter : IPdfConverter
         var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi)
             ?? throw new Exception("Couldn't create Kompas converter.");
 
-        worker?.ReportProgress(++value);
+        worker?.ReportProgress(++progressValue);
 
         using var targetDoc = new PdfDocument();
 
         foreach (var file in kompasDocuments)
         {
-            if (!file.Formats.Any(f => format.HasFlag(f.DrawingFormat))) continue;
+            if (!file.Formats.Any(f => f.DrawingFormat != DrawingFormat.Undefined && formatsToConvert.HasFlag(f.DrawingFormat)))
+            {
+                worker?.ReportProgress(++progressValue);
+                continue;
+            }
 
             var lastIndex = file.FullFileName.LastIndexOf('\\');
 
             if (lastIndex == -1)
             {
                 errors.Add($"Wrong path for file {file.FullFileName}");
+                worker?.ReportProgress(++progressValue);
                 continue;
             }
 
@@ -55,6 +59,7 @@ internal class PdfConverter : IPdfConverter
             if (converter.Convert(file.FullFileName, pdfFilePath, 0, false) == 0)
             {
                 errors.Add($"Couldn't convert to pdf file {file.FullFileName}");
+                worker?.ReportProgress(++progressValue);
                 continue;
             }
 
@@ -63,9 +68,12 @@ internal class PdfConverter : IPdfConverter
             {
                 for (var i = 0; i < pdfDoc.PageCount; i++)
                 {
-                    var pageFormat = GetPageFormat(pdfDoc.Pages[i].Width.Millimeter, pdfDoc.Pages[i].Height.Millimeter, pdfDoc.Pages[i].Orientation);
+                    var pageFormat = GetPageFormat(pdfDoc.Pages[i].Width.Millimeter, pdfDoc.Pages[i].Height.Millimeter);
 
-                    //if ()
+                    if (pageFormat == DrawingFormat.Undefined || !formatsToConvert.HasFlag(pageFormat))
+                    {
+                        continue;
+                    }
 
                     targetDoc.AddPage(pdfDoc.Pages[i]);
                 }
@@ -74,40 +82,92 @@ internal class PdfConverter : IPdfConverter
             {
                 errors.Add($"Couldn't add to pdf file {pdfFilePath}");
             }
+            finally
+            {
+                pdfDoc.Close();
 
-            pdfDoc.Close();
+                File.Delete(pdfFilePath);
 
-            File.Delete(pdfFilePath);
-
-            worker?.ReportProgress(++value);
+                worker?.ReportProgress(++progressValue);
+            }
         }
 
         if (targetDoc.PageCount == 0)
         {
-            worker?.ReportProgress(++value);
+            worker?.ReportProgress(++progressValue);
             throw new Exception("Pdf document have not any page. File don't saved.");
         }
 
         var first = kompasDocuments.First();
 
+        var filePrefix = formatsToConvert switch
+        {
+            DrawingFormat.Undefined => string.Empty,
+            DrawingFormat.A0 => "_A0",
+            DrawingFormat.A1 => "_A1",
+            DrawingFormat.A2 => "_A2",
+            DrawingFormat.A3 => "_A3",
+            DrawingFormat.A4 => "_A4",
+            DrawingFormat.A5 => "_A5",
+            DrawingFormat.All => string.Empty,
+            _ => throw new ArgumentOutOfRangeException(nameof(formatsToConvert), formatsToConvert, null)
+        };
+
         var newFilepath = first.FullFileName
-            [..(kompasDocuments.First().FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
-        targetDoc.Save(newFilepath + PdfExtension);
+            [..(kompasDocuments.First().FullFileName.LastIndexOf('\\') + 1)]
+                          + first.Marking
+                          + " - "
+                          + first.Name
+                          + filePrefix
+                          + PdfExtension;
+
+
+        targetDoc.Save(newFilepath);
 
         return errors;
     }
 
-    private static DrawingFormat GetPageFormat(double width, double height, PageOrientation orientation)
+    private static DrawingFormat GetPageFormat(double width, double height)
     {
-        (int height, int width) a4PortraitSize = (297, 214);
+        const int accuracy = 4;
 
-        if (orientation == PageOrientation.Portrait)
+        (int height, int width) a5PortraitSize = (210, 148);
+        (int height, int width) a4PortraitSize = (297, 210);
+        (int height, int width) a3PortraitSize = (420, 297);
+        (int height, int width) a2PortraitSize = (594, 420);
+        (int height, int width) a1PortraitSize = (841, 594);
+        (int height, int width) a0PortraitSize = (1189, 841);
+
+
+        switch (true)
         {
-            //if (width is > (a4PortraitSize.width - 2) and < a4PortraitSize.width + 2)
-            //{
-            //    return DrawingFormat.A4;
-            //}
+            case true when CheckSizeWithAccuracy(width, a5PortraitSize.width, accuracy) && CheckSizeWithAccuracy(height, a5PortraitSize.height, accuracy):
+            case true when CheckSizeWithAccuracy(width, a5PortraitSize.height, accuracy) && CheckSizeWithAccuracy(height, a5PortraitSize.width, accuracy):
+                return DrawingFormat.A5;
+            case true when CheckSizeWithAccuracy(width, a4PortraitSize.width, accuracy) && CheckSizeWithAccuracy(height, a4PortraitSize.height, accuracy):
+            case true when CheckSizeWithAccuracy(width, a4PortraitSize.height, accuracy) && CheckSizeWithAccuracy(height, a4PortraitSize.width, accuracy):
+                return DrawingFormat.A4;
+            case true when CheckSizeWithAccuracy(width, a3PortraitSize.width, accuracy) && CheckSizeWithAccuracy(height, a3PortraitSize.height, accuracy):
+            case true when CheckSizeWithAccuracy(width, a3PortraitSize.height, accuracy) && CheckSizeWithAccuracy(height, a3PortraitSize.width, accuracy):
+                return DrawingFormat.A3;
+            case true when CheckSizeWithAccuracy(width, a2PortraitSize.width, accuracy) && CheckSizeWithAccuracy(height, a2PortraitSize.height, accuracy):
+            case true when CheckSizeWithAccuracy(width, a2PortraitSize.height, accuracy) && CheckSizeWithAccuracy(height, a2PortraitSize.width, accuracy):
+                return DrawingFormat.A2;
+            case true when CheckSizeWithAccuracy(width, a1PortraitSize.width, accuracy) && CheckSizeWithAccuracy(height, a1PortraitSize.height, accuracy):
+            case true when CheckSizeWithAccuracy(width, a1PortraitSize.height, accuracy) && CheckSizeWithAccuracy(height, a1PortraitSize.width, accuracy):
+                return DrawingFormat.A1;
+            case true when CheckSizeWithAccuracy(width, a0PortraitSize.width, accuracy) && CheckSizeWithAccuracy(height, a0PortraitSize.height, accuracy):
+            case true when CheckSizeWithAccuracy(width, a0PortraitSize.height, accuracy) && CheckSizeWithAccuracy(height, a0PortraitSize.width, accuracy):
+                return DrawingFormat.A0;
+            default:
+                return DrawingFormat.Undefined;
         }
-        return DrawingFormat.Undefined;
     }
+
+    private static bool CheckSizeWithAccuracy(double value, int defaultValue, int accuracy)
+    {
+        return value > (defaultValue - accuracy) && value < (defaultValue + accuracy);
+    }
+
+
 }

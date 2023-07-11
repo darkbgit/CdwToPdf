@@ -2,6 +2,8 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using CdwHelper.Core.Enums;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
 using CdwHelper.WPF.Models;
@@ -50,7 +52,11 @@ public partial class MainWindow : Window
 
     private void OpenWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
-        ((DrawingsViewModel)DataContext).Drawings.Sort((a, b) => a.Marking.CompareTo(b.Marking));
+        if (!((DrawingsViewModel)DataContext).Drawings.Any()) return;
+
+        ((DrawingsViewModel)DataContext).Drawings
+            .Sort((a, b) => string.Compare(a.Marking, b.Marking, StringComparison.Ordinal));
+
         ((DrawingsViewModel)DataContext).CheckMarkings();
 
         MessageBox.Show("Done");
@@ -58,7 +64,7 @@ public partial class MainWindow : Window
         ChooseDirButton.IsEnabled = true;
         ChooseFileButton.IsEnabled = true;
         DrawingsToolBar.IsEnabled = true;
-        ConvertButton.IsEnabled = true;
+        SaveToPdfButton.IsEnabled = true;
         pbConvert.Visibility = Visibility.Hidden;
     }
 
@@ -77,6 +83,8 @@ public partial class MainWindow : Window
     {
         if (sender is not BackgroundWorker worker) return;
 
+        if (e.Argument is not DrawingFormat drawingFormat) return;
+
         var drawings = new List<KompasDocument>();
 
         Application.Current.Dispatcher.Invoke(() =>
@@ -88,7 +96,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var errors = _pdfConverter.ConvertFiles(drawings, worker).ToList();
+            var errors = _pdfConverter.ConvertFiles(drawings, worker, drawingFormat).ToList();
 
             if (errors.Any())
             {
@@ -108,79 +116,6 @@ public partial class MainWindow : Window
             AnalyzeFiles(worker, e.Argument as IEnumerable<string> ?? Array.Empty<string>());
         }
     }
-
-    //private void ConvertFiles(BackgroundWorker worker)
-    //{
-    //    if (!((DrawingsViewModel)DataContext).Drawings.Any()) return;
-
-    //    int value = 0;
-
-    //    var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi);
-
-    //    if (converter == null)
-    //    {
-    //        MessageBox.Show("Couldn't create Kompas converter.");
-    //        return;
-    //    }
-
-    //    worker.ReportProgress(++value);
-
-    //    using var targetDoc = new PdfDocument();
-
-    //    var files = ((DrawingsViewModel)DataContext).Drawings
-    //        .ToList();
-
-    //    foreach (var file in files)
-    //    {
-    //        var lastIndex = file.FullFileName.LastIndexOf('\\');
-
-    //        if (lastIndex == -1)
-    //        {
-    //            MessageBox.Show($"Wrong path for file {file.FullFileName}");
-    //            continue;
-    //        }
-    //        var pdfFilePath = file.FullFileName[..(lastIndex + 1)] + file + ".pdf";
-
-    //        if (converter.Convert(file.FullFileName, pdfFilePath, 0, false) == 0)
-    //        {
-    //            MessageBox.Show($"Couldn't convert to pdf file {file.FullFileName}");
-    //        }
-
-    //        using var pdfDoc = PdfReader.Open(pdfFilePath, PdfDocumentOpenMode.Import);
-    //        try
-    //        {
-    //            for (var i = 0; i < pdfDoc.PageCount; i++)
-    //            {
-    //                targetDoc.AddPage(pdfDoc.Pages[i]);
-    //            }
-    //        }
-    //        catch (Exception)
-    //        {
-    //            MessageBox.Show($"Couldn't add to pdf file {pdfFilePath}");
-    //        }
-
-    //        pdfDoc.Close();
-
-    //        File.Delete(pdfFilePath);
-
-    //        worker.ReportProgress(++value);
-    //    }
-
-    //    if (targetDoc.PageCount == 0)
-    //    {
-    //        worker.ReportProgress(++value);
-    //        MessageBox.Show("Pdf document have not any page. File don't saved.");
-    //        return;
-    //    }
-
-    //    var first = files.First();
-
-    //    var newFilePath = first.FullFileName
-    //        [..(first.FullFileName.LastIndexOf('\\') + 1)] + first.Marking + " - " + first.Name;
-    //    targetDoc.Save(newFilePath + ".pdf");
-
-    //    MessageBox.Show("Completed");
-    //}
 
     private void AnalyzeFiles(BackgroundWorker worker, IEnumerable<string> filesPaths)
     {
@@ -209,21 +144,6 @@ public partial class MainWindow : Window
         {
             MessageBox.Show(string.Join(Environment.NewLine, errorList));
         }
-    }
-
-    private void BtnConvert_Click(object sender, RoutedEventArgs e)
-    {
-        ChooseDirButton.IsEnabled = false;
-        ChooseFileButton.IsEnabled = false;
-        DrawingsToolBar.IsEnabled = false;
-        FilesListView.IsEnabled = false;
-
-        pbConvert.IsEnabled = true;
-        pbConvert.Visibility = Visibility.Visible;
-        pbConvert.Maximum = ((DrawingsViewModel)DataContext).Drawings.Count;
-        pbConvert.Value = 0;
-
-        _convertWorker.RunWorkerAsync();
     }
 
     private void BtnChooseDir_Click(object sender, RoutedEventArgs e)
@@ -286,14 +206,14 @@ public partial class MainWindow : Window
         try
         {
             ((DrawingsViewModel)DataContext).Drawings.Add(_fileAnalyzer.Analyze(path));
+
+            SaveToPdfButton.IsEnabled = true;
+            RenameButton.IsEnabled = true;
         }
         catch (Exception exception)
         {
             MessageBox.Show(exception.Message);
         }
-
-        ConvertButton.IsEnabled = true;
-        RenameButton.IsEnabled = true;
     }
 
     private void MoveSelectedItemListBox(System.Windows.Controls.ListView lv, int idx, bool moveUp)
@@ -334,7 +254,7 @@ public partial class MainWindow : Window
         if (!((DrawingsViewModel)DataContext).Drawings.Any())
         {
             RenameButton.IsEnabled = false;
-            ConvertButton.IsEnabled = false;
+            SaveToPdfButton.IsEnabled = false;
         }
         else
         {
@@ -405,5 +325,78 @@ public partial class MainWindow : Window
             .ToList();
 
         MessageBox.Show(string.Join(Environment.NewLine, result.Select(i => $"{i.Format} - {i.Count}")));
+    }
+
+    private void ConvertA0Button_OnClick(object sender, RoutedEventArgs e)
+    {
+        PrepareToConverting();
+
+        _convertWorker.RunWorkerAsync(DrawingFormat.A0);
+    }
+
+    private void ConvertA1Button_OnClick(object sender, RoutedEventArgs e)
+    {
+        PrepareToConverting();
+
+        _convertWorker.RunWorkerAsync(DrawingFormat.A1);
+    }
+
+    private void ConvertA2Button_OnClick(object sender, RoutedEventArgs e)
+    {
+        PrepareToConverting();
+
+        _convertWorker.RunWorkerAsync(DrawingFormat.A2);
+    }
+
+    private void ConvertA3Button_OnClick(object sender, RoutedEventArgs e)
+    {
+        PrepareToConverting();
+
+        _convertWorker.RunWorkerAsync(DrawingFormat.A3);
+    }
+
+    private void ConvertA4Button_OnClick(object sender, RoutedEventArgs e)
+    {
+        PrepareToConverting();
+
+        _convertWorker.RunWorkerAsync(DrawingFormat.A4);
+    }
+
+    private void ConvertAllButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        PrepareToConverting();
+
+        _convertWorker.RunWorkerAsync(DrawingFormat.All);
+    }
+
+    private void PrepareToConverting()
+    {
+        ChooseDirButton.IsEnabled = false;
+        ChooseFileButton.IsEnabled = false;
+        DrawingsToolBar.IsEnabled = false;
+        FilesListView.IsEnabled = false;
+
+        pbConvert.IsEnabled = true;
+        pbConvert.Visibility = Visibility.Visible;
+        pbConvert.Maximum = ((DrawingsViewModel)DataContext).Drawings.Count;
+        pbConvert.Value = 0;
+    }
+
+    private void SaveToPdfButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        SaveToPdfPopup.IsOpen = true;
+
+        SaveToPdfPopup.Closed += (senderClosed, eClosed) =>
+        {
+            SaveToPdfButton.IsChecked = false;
+        };
+    }
+
+    private void SaveToPdfPopup_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Popup popup)
+        {
+            popup.IsOpen = false;
+        }
     }
 }

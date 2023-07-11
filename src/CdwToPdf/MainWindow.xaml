@@ -118,6 +118,16 @@
             <Grid Grid.Column="1">
                 <ToolBarTray Orientation="Vertical">
                     <ToolBar x:Name="DrawingsToolBar">
+                        <ToolBar.Resources>
+                            <Style TargetType="{x:Type Popup}">
+                                <Setter Property="StaysOpen" Value="False"></Setter>
+                                <EventSetter Event="Button.Click" Handler="SaveToPdfPopup_Click"></EventSetter>
+                            </Style>
+                            <Style TargetType="{x:Type Border}">
+                                <Setter Property="Background" Value="{StaticResource {x:Static SystemColors.MenuBrushKey}}"></Setter>
+                            </Style>
+                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"></Style>
+                        </ToolBar.Resources>
                         <Button x:Name="UpButton" IsEnabled="False" Click="BtnUp_Click" Width="40">
                             <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
                         </Button>
@@ -129,9 +139,23 @@
                         </Button>
                         <Button x:Name="RenameButton" Content="Edit" Click="BtnRename_Click" Height="40" Width="40"
                                 IsEnabled="False" />
-                        <Button x:Name="ConvertButton" Click="BtnConvert_Click" IsEnabled="False">
+                        <ToggleButton Name="SaveToPdfButton" Click="SaveToPdfButton_OnClick" IsEnabled="False">
                             <TextBlock>Save<LineBreak/>to Pdf</TextBlock>
-                        </Button>
+                        </ToggleButton>
+                        <Popup x:Name="SaveToPdfPopup" PlacementTarget="{Binding ElementName=SaveToPdfButton}">
+                            <Border>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="All" Click="ConvertAllButton_OnClick"></Button>
+                                    <Separator />
+                                    <Button Content="A0" Click="ConvertA0Button_OnClick" />
+                                    <Button Content="A1" Click="ConvertA1Button_OnClick" />
+                                    <Button Content="A2" Click="ConvertA2Button_OnClick" />
+                                    <Button Content="A3" Click="ConvertA3Button_OnClick" />
+                                    <Button Content="A4" Click="ConvertA4Button_OnClick" />
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+
                         <Button x:Name="CalculateFormatsButton" Content="A4" Width="40" Height="40"
                                 Click="CalculateFormatsButton_OnClick">
                             <Button.Style>

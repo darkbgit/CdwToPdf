@@ -10,17 +10,17 @@ public interface IPdfConverter
     /// Convert all KompasDocuments to one .pdf file.
     /// </summary>
     /// <param name="documents"></param>
-    /// <param name="format"></param>
+    /// <param name="formatsToConvert"></param>
     /// <returns>Converting errors.</returns>
-    IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents, DrawingFormat format = DrawingFormat.All);
+    IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents, DrawingFormat formatsToConvert = DrawingFormat.All);
 
     /// <summary>
     /// Convert all KompasDocuments to one .pdf file.
     /// </summary>
     /// <param name="documents"></param>
     /// <param name="worker"></param>
-    /// <param name="format"></param>
+    /// <param name="formatsToConvert"></param>
     /// <returns>Converting errors.</returns>
     IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents, BackgroundWorker? worker,
-        DrawingFormat format = DrawingFormat.All);
+        DrawingFormat formatsToConvert = DrawingFormat.All);
 }
