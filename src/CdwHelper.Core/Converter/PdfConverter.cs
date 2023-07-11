@@ -8,13 +8,19 @@ using PdfSharp.Pdf.IO;
 
 namespace CdwHelper.Core.Converter;
 
-public class PdfConverter : IPdfConverter
+internal class PdfConverter : IPdfConverter
 {
     private const string KompasApi = "KOMPAS.Application.7";
     private const string KompasPathPdfConverter = @"C:\Program Files\ASCON\KOMPAS-3D v21\Bin\Pdf2d.dll";
     private const string PdfExtension = ".pdf";
 
-    public IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents, BackgroundWorker worker,
+    public IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents,
+        DrawingFormat format = DrawingFormat.All)
+    {
+        return ConvertFiles(documents, null, format);
+    }
+
+    public IEnumerable<string> ConvertFiles(IEnumerable<KompasDocument> documents, BackgroundWorker? worker,
         DrawingFormat format = DrawingFormat.All)
     {
         var errors = new List<string>();
@@ -28,7 +34,7 @@ public class PdfConverter : IPdfConverter
         var converter = DrawingConverterFactory.GetConverter(KompasPathPdfConverter, KompasApi)
             ?? throw new Exception("Couldn't create Kompas converter.");
 
-        worker.ReportProgress(++value);
+        worker?.ReportProgress(++value);
 
         using var targetDoc = new PdfDocument();
 
@@ -57,7 +63,10 @@ public class PdfConverter : IPdfConverter
             {
                 for (var i = 0; i < pdfDoc.PageCount; i++)
                 {
-                    var format = GetPageFormat(pdfDoc.Pages[i].Width.Millimeter, pdfDoc.Pages[i].Height.Millimeter, pdfDoc.Pages[i].Orientation);
+                    var pageFormat = GetPageFormat(pdfDoc.Pages[i].Width.Millimeter, pdfDoc.Pages[i].Height.Millimeter, pdfDoc.Pages[i].Orientation);
+
+                    //if ()
+
                     targetDoc.AddPage(pdfDoc.Pages[i]);
                 }
             }
@@ -70,12 +79,12 @@ public class PdfConverter : IPdfConverter
 
             File.Delete(pdfFilePath);
 
-            worker.ReportProgress(++value);
+            worker?.ReportProgress(++value);
         }
 
         if (targetDoc.PageCount == 0)
         {
-            worker.ReportProgress(++value);
+            worker?.ReportProgress(++value);
             throw new Exception("Pdf document have not any page. File don't saved.");
         }
 
@@ -94,10 +103,10 @@ public class PdfConverter : IPdfConverter
 
         if (orientation == PageOrientation.Portrait)
         {
-            if (width is > (a4PortraitSize.width - 2) and < a4PortraitSize.width + 2)
-            {
-                return DrawingFormat.A4;
-            }
+            //if (width is > (a4PortraitSize.width - 2) and < a4PortraitSize.width + 2)
+            //{
+            //    return DrawingFormat.A4;
+            //}
         }
         return DrawingFormat.Undefined;
     }

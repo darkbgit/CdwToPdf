@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.49" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
     <PackageReference Include="PDFsharpNetStandard2" Version="1.51.4845" />
   </ItemGroup>
 

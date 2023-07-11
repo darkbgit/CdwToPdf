@@ -2,8 +2,6 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using CdwHelper.Core.Analyzers;
-using CdwHelper.Core.Converter;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
 using CdwHelper.WPF.Models;
@@ -24,10 +22,14 @@ public partial class MainWindow : Window
         WorkerReportsProgress = true
     };
 
-    private readonly IPdfConverter _pdfConverter = new PdfConverter();
+    private readonly IPdfConverter _pdfConverter;
+    private readonly IFileAnalyzer _fileAnalyzer;
 
-    public MainWindow()
+    public MainWindow(IPdfConverter pdfConverter, IFileAnalyzer fileAnalyzer)
     {
+        _pdfConverter = pdfConverter;
+        _fileAnalyzer = fileAnalyzer;
+
         InitializeComponent();
 
         _convertWorker.DoWork += ConvertWorkerDoWork;
@@ -188,13 +190,11 @@ public partial class MainWindow : Window
 
         var errorList = new List<string>();
 
-        IFileAnalyzer fileAnalyzer = new FileAnalyzer();
-
         foreach (var file in filesPaths)
         {
             try
             {
-                var document = fileAnalyzer.Analyze(file);
+                var document = _fileAnalyzer.Analyze(file);
                 Application.Current.Dispatcher.Invoke(delegate { ((DrawingsViewModel)DataContext).Drawings.Add(document); });
             }
             catch (Exception exception)
@@ -270,8 +270,6 @@ public partial class MainWindow : Window
 
     private void BtnChooseFile_Click(object sender, RoutedEventArgs e)
     {
-        IFileAnalyzer analyzer = new FileAnalyzer();
-
         using var dialog = new OpenFileDialog
         {
             //Description = "Выберите папку",
@@ -287,7 +285,7 @@ public partial class MainWindow : Window
 
         try
         {
-            ((DrawingsViewModel)DataContext).Drawings.Add(analyzer.Analyze(path));
+            ((DrawingsViewModel)DataContext).Drawings.Add(_fileAnalyzer.Analyze(path));
         }
         catch (Exception exception)
         {

@@ -31,6 +31,8 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
     <PackageReference Include="PDFsharpNetStandard2" Version="1.51.4845" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />

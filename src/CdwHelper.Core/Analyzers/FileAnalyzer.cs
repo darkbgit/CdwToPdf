@@ -3,7 +3,7 @@ using CdwHelper.Core.Models;
 
 namespace CdwHelper.Core.Analyzers;
 
-public class FileAnalyzer : IFileAnalyzer
+internal class FileAnalyzer : IFileAnalyzer
 {
     public KompasDocument Analyze(string filePath)
     {

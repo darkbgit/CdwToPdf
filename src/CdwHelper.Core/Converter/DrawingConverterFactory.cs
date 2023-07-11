@@ -4,7 +4,7 @@ using Pdf2d_LIBRARY;
 
 namespace CdwHelper.Core.Converter;
 
-public class DrawingConverterFactory
+internal class DrawingConverterFactory
 {
     public static IConverter? GetConverter(string pathPdfConverter, string apiApplication)
     {
