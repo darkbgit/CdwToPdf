@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using CdwHelper.Core.Enums;
 using CdwHelper.Core.Exceptions;
+using CdwHelper.Core.Helpers;
 using CdwHelper.Core.Interfaces;
 using CdwHelper.Core.Models;
 using CdwHelper.WPF.Helpers;
@@ -48,6 +49,8 @@ public partial class MainWindow : Window
 
         DataContext = new DrawingsViewModel();
     }
+
+    public SettingsWindow? SettingsWindow { get; set; }
 
     private void Worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
     {
@@ -308,27 +311,15 @@ public partial class MainWindow : Window
 
     private void CalculateFormatsButton_OnClick(object sender, RoutedEventArgs e)
     {
-        GetFormats(((DrawingsViewModel)DataContext).Drawings);
-    }
+        var documents = ((DrawingsViewModel)DataContext).Drawings.ToList();
 
-    private static void GetFormats(IEnumerable<KompasDocument> documents)
-    {
-        var kompasDocuments = documents.ToList();
-
-        if (!kompasDocuments.Any())
+        if (!documents.Any())
         {
             MessageBox.Show("No drawings.");
             return;
         }
 
-        var result = kompasDocuments
-            .SelectMany(d => d.Formats)
-            .GroupBy(f => f.DrawingFormat)
-            .OrderByDescending(f => f.Key)
-            .Select(g => new { Format = g.Key, Count = g.Sum(f => f.Count * f.SheetsCount) })
-            .ToList();
-
-        MessageBox.Show(string.Join(Environment.NewLine, result.Select(i => $"{i.Format} - {i.Count}")));
+        MessageBox.Show(DrawingsHelpers.CalculateFormats(documents));
     }
 
     private void ConvertA0Button_OnClick(object sender, RoutedEventArgs e)
@@ -411,8 +402,13 @@ public partial class MainWindow : Window
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        var settingsWindow = _windowFactory.Create<SettingsWindow>();
+        if (SettingsWindow == null)
+        {
+            SettingsWindow = _windowFactory.Create<SettingsWindow>();
+            if (SettingsWindow == null) return;
+        }
 
-        settingsWindow?.ShowDialog();
+        SettingsWindow.Owner = this;
+        SettingsWindow.ShowDialog();
     }
 }

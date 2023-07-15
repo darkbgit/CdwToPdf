@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:CdwHelper.WPF"
         xmlns:models="clr-namespace:CdwHelper.Core.Models;assembly=CdwHelper.Core" d:DataContext="{d:DesignInstance Type=models:KompasDocument}"
         mc:Ignorable="d"
-        Title="SettingsWindow" Height="180" Width="700">
+        Title="SettingsWindow" Height="180" Width="700" Closing="Window_Closing">
     <Window.DataContext>
         <models:PdfOptions />
     </Window.DataContext>

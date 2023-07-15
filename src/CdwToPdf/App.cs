@@ -3,21 +3,18 @@ using CdwHelper.WPF.Windows;
 
 namespace CdwHelper.WPF;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
-public partial class App : System.Windows.Application
+public class App : System.Windows.Application
 {
-    private readonly MainWindow mainWindow;
+    private readonly MainWindow _mainWindow;
 
     public App(MainWindow mainWindow)
     {
-        this.mainWindow = mainWindow;
+        _mainWindow = mainWindow;
     }
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        mainWindow.Show();
+        _mainWindow.Show();
         base.OnStartup(e);
     }
 }

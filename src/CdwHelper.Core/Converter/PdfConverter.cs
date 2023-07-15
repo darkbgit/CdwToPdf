@@ -10,8 +10,6 @@ namespace CdwHelper.Core.Converter;
 
 internal class PdfConverter : IPdfConverter
 {
-    //private readonly string _kompasApi;
-    //private readonly string _pathToKompasPdfConverter;
     private readonly IOptionsMonitor<PdfOptions> _pdfOptionsMonitor;
     private const string PdfExtension = ".pdf";
 

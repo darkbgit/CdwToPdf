@@ -25,7 +25,7 @@ public class Program
             {
                 services.AddSingleton<App>();
                 services.AddSingleton<MainWindow>();
-                services.AddScoped<SettingsWindow>();
+                services.AddTransient<SettingsWindow>();
                 services.Configure<PdfOptions>(configuration.GetSection("PdfOptions"));
                 ConfigureServices(services);
             })
