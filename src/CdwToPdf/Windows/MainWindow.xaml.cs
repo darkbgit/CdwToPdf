@@ -59,12 +59,26 @@ public partial class MainWindow : Window
 
     private void OpenWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
-        if (!((DrawingsViewModel)DataContext).Drawings.Any()) return;
+        if (e.Error != null)
+        {
+            MessageBox.Show(e.Error.Message);
+            ChooseDirButton.IsEnabled = true;
+            ChooseFileButton.IsEnabled = true;
+            pbConvert.Visibility = Visibility.Hidden;
+            return;
+        }
+
+        if (!((DrawingsViewModel)DataContext).Drawings.Any())
+        {
+            MessageBox.Show("No drawings added.");
+            ChooseDirButton.IsEnabled = true;
+            ChooseFileButton.IsEnabled = true;
+            pbConvert.Visibility = Visibility.Hidden;
+            return;
+        }
 
         ((DrawingsViewModel)DataContext).Drawings
             .Sort((a, b) => string.Compare(a.Marking, b.Marking, StringComparison.Ordinal));
-
-        ((DrawingsViewModel)DataContext).CheckMarkings();
 
         MessageBox.Show("Done");
 
@@ -77,6 +91,15 @@ public partial class MainWindow : Window
 
     private void ConvertWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
+        if (e.Error != null)
+        {
+            MessageBox.Show(e.Error.Message);
+            ChooseDirButton.IsEnabled = true;
+            ChooseFileButton.IsEnabled = true;
+            pbConvert.Visibility = Visibility.Hidden;
+            return;
+        }
+
         MessageBox.Show("Done");
 
         ChooseDirButton.IsEnabled = true;
@@ -261,7 +284,6 @@ public partial class MainWindow : Window
         if (!((DrawingsViewModel)DataContext).Drawings.Any())
         {
             RenameButton.IsEnabled = false;
-            SaveToPdfButton.IsEnabled = false;
         }
         else
         {
@@ -410,5 +432,10 @@ public partial class MainWindow : Window
 
         SettingsWindow.Owner = this;
         SettingsWindow.ShowDialog();
+    }
+
+    private void CheckMarkingsButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        ((DrawingsViewModel)DataContext).CheckMarkings();
     }
 }

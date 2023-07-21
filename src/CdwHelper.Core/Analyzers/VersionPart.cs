@@ -1,4 +1,5 @@
 ﻿using CdwHelper.Core.Enums;
+using CdwHelper.Core.Exceptions;
 
 namespace CdwHelper.Core.Analyzers;
 
@@ -32,14 +33,14 @@ internal class VersionPart
             ?[AppVersionName.Length..];
 
         if (string.IsNullOrEmpty(version))
-            throw new Exception("Couldn't get Kompas version in which file was created.");
+            throw new AnalyzeException("Couldn't get Kompas version in which file was created.");
 
         var kompasVersion = version switch
         {
             "19.0" => KompasVersion.V19,
             "20.0" => KompasVersion.V20,
             "21.0" => KompasVersion.V21,
-            _ => throw new Exception($"Wrong version {version}.")
+            _ => throw new AnalyzeException($"Wrong version {version}.")
         };
 
         return kompasVersion;
@@ -59,7 +60,7 @@ internal class VersionPart
             return type;
         }
 
-        throw new Exception("Couldn't get Kompas file type.");
+        throw new AnalyzeException("Couldn't get Kompas file type.");
     }
 
     private static Stream CopyToStreamAndSetToBegin(Stream stream)

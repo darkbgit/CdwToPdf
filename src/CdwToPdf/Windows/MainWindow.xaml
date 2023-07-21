@@ -31,7 +31,7 @@
             <RowDefinition Height="30"></RowDefinition>
             <RowDefinition></RowDefinition>
             <RowDefinition Height="50"></RowDefinition>
-            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="40"></RowDefinition>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
@@ -105,7 +105,7 @@
                                     <DataTemplate.Triggers>
                                         <DataTrigger Binding="{Binding IsGoodFormats}" Value="false">
                                             <Setter TargetName="MarkingTextBlock" Property="Background" Value="Red" />
-                                            <Setter TargetName="MarkingTextBlock" Property="ToolTip" Value="Некоректный формат" />
+                                            <Setter TargetName="MarkingTextBlock" Property="ToolTip" Value="Некорректный формат" />
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>
@@ -119,102 +119,97 @@
             <Grid Grid.Column="1">
                 <StackPanel x:Name="DrawingsToolBar" Orientation="Vertical">
                     <!--<ToolBar x:Name="DrawingsToolBar">-->
-                        <StackPanel.Resources>
-                            <Style TargetType="{x:Type Popup}">
-                                <Setter Property="StaysOpen" Value="False"></Setter>
-                                <EventSetter Event="Button.Click" Handler="SaveToPdfPopup_Click"></EventSetter>
-                            </Style>
-                            <Style TargetType="{x:Type Border}">
-                                <Setter Property="Background" Value="{StaticResource {x:Static SystemColors.MenuBrushKey}}"></Setter>
-                            </Style>
-                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"></Style>
-                        </StackPanel.Resources>
-                        <Button x:Name="UpButton" IsEnabled="False" Click="BtnUp_Click" Width="40">
-                            <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
-                        </Button>
-                        <Button x:Name="RemoveButton" IsEnabled="False" Click="BtnRemove_Click" Width="40">
-                            <Image Source="/Resources/Icons/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
-                        </Button>
-                        <Button x:Name="DownButton" IsEnabled="False" Click="BtnDown_Click" Width="40">
-                            <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
-                        </Button>
-                        <Button x:Name="RenameButton" Content="Edit" Click="BtnRename_Click" Height="40" Width="40"
+                    <StackPanel.Resources>
+                        <Style TargetType="{x:Type Popup}">
+                            <Setter Property="StaysOpen" Value="False"></Setter>
+                            <EventSetter Event="Button.Click" Handler="SaveToPdfPopup_Click"></EventSetter>
+                        </Style>
+                        <Style TargetType="{x:Type Border}">
+                            <Setter Property="Background" Value="{StaticResource {x:Static SystemColors.MenuBrushKey}}"></Setter>
+                        </Style>
+                        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+
+                        </Style>
+                        <Style x:Name="EnableIfAnyDrawings" x:Key="EnableIfAnyDrawings" TargetType="Button"  BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Drawings.Count}" Value="0">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+
+                    </StackPanel.Resources>
+                    <Button x:Name="UpButton" IsEnabled="False" Click="BtnUp_Click" Width="40">
+                        <Image Source="/Resources/Icons/up-arrow_icon-icons.com_73351.png" Style="{StaticResource ImageDisabled}"/>
+                    </Button>
+                    <Button x:Name="RemoveButton" IsEnabled="False" Click="BtnRemove_Click" Width="40">
+                        <Image Source="/Resources/Icons/delete_delete_exit_1577.png" Style="{StaticResource ImageDisabled}"/>
+                    </Button>
+                    <Button x:Name="DownButton" IsEnabled="False" Click="BtnDown_Click" Width="40">
+                        <Image Source="/Resources/Icons/angle-arrow-down_icon-icons.com_73683.png" Style="{StaticResource ImageDisabled}"/>
+                    </Button>
+                    <Button x:Name="RenameButton" Content="Edit" Click="BtnRename_Click" Height="40" Width="40"
                                 IsEnabled="False" />
-                        <ToggleButton Name="SaveToPdfButton" Click="SaveToPdfButton_OnClick" Height="40" Width="40"
+                    <ToggleButton Name="SaveToPdfButton" Click="SaveToPdfButton_OnClick" Height="40" Width="40"
                                       IsEnabled="False">
-                            <ToggleButton.Style>
+                        <ToggleButton.Style>
                             <Style TargetType="ToggleButton" BasedOn="{StaticResource {x:Static ToolBar.ToggleButtonStyleKey}}"></Style>
-                            </ToggleButton.Style>
-                            <TextBlock>Save<LineBreak/>to Pdf</TextBlock>
-                        </ToggleButton>
-                        <Popup x:Name="SaveToPdfPopup" PlacementTarget="{Binding ElementName=SaveToPdfButton}" Placement="Left" VerticalAlignment="Center"
+                        </ToggleButton.Style>
+                        <TextBlock>Save<LineBreak/>to Pdf</TextBlock>
+                    </ToggleButton>
+                    <Popup x:Name="SaveToPdfPopup" PlacementTarget="{Binding ElementName=SaveToPdfButton}" Placement="Left" VerticalAlignment="Center"
                                Closed="SaveToPdfPopup_OnClosed">
-                            <Border>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="All" Click="ConvertAllButton_OnClick" Height="30" Width="30" />
+                        <Border>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="All" Click="ConvertAllButton_OnClick" Height="30" Width="30" />
                                 <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
                                 <Button Content="A0" Height="30" Width="30" Click="ConvertA0Button_OnClick" />
                                 <Button Content="A1" Height="30" Width="30" Click="ConvertA1Button_OnClick" />
                                 <Button Content="A2" Height="30" Width="30" Click="ConvertA2Button_OnClick" />
                                 <Button Content="A3" Height="30" Width="30" Click="ConvertA3Button_OnClick" />
                                 <Button Content="A4" Height="30" Width="30" Click="ConvertA4Button_OnClick" />
-                                </StackPanel>
-                            </Border>
-                        </Popup>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
 
-                        <Button x:Name="CalculateFormatsButton" Content="A4" Width="40" Height="40"
-                                Click="CalculateFormatsButton_OnClick">
-                            <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Drawings.Count}" Value="0">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </StackPanel>
-
+                    <Button x:Name="CalculateFormatsButton" Content="A4" Width="40" Height="40"
+                                Click="CalculateFormatsButton_OnClick" Style="{StaticResource EnableIfAnyDrawings}" />
+                    <Button x:Name="CheckMarkingsButton" Content="Check" Width="40" Height="40"
+                            Click="CheckMarkingsButton_OnClick" Style="{StaticResource EnableIfAnyDrawings}" />
+                </StackPanel>
             </Grid>
-
         </Grid>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100"></ColumnDefinition>
-                <ColumnDefinition Width="100"></ColumnDefinition>
-                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="300"></ColumnDefinition>
                 <ColumnDefinition Width="300"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
-            <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
-                      Grid.Column="0" Height="15"/>
-            <CheckBox x:Name="cbFullPath" Content="Full path" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
-                      Grid.Column="1" Height="15"/>
-            <CheckBox x:Name="cbWith3D" Content="With 3d files" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" 
-                      Grid.Column="2" Height="15"/>
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <CheckBox x:Name="cbSubdirs" Content="Subdirs" HorizontalAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center" 
+                          Height="15"/>
+                <CheckBox x:Name="cbFullPath" Content="Full path" HorizontalAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center" 
+                         Height="15"/>
+                <CheckBox x:Name="cbWith3D" Content="With 3d files" HorizontalAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center" 
+                          Height="15"/>
+            </StackPanel>
 
-            <ProgressBar x:Name="pbConvert" Grid.Column="3" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250"
+            <ProgressBar x:Name="pbConvert" Grid.Column="1" HorizontalAlignment="Center" Height="10" VerticalAlignment="Center" Width="250"
                          IsEnabled="False" Visibility="Hidden"/>
-
         </Grid>
         <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="150"></ColumnDefinition>
-                <ColumnDefinition Width="150"></ColumnDefinition>
-                <ColumnDefinition Width="150"></ColumnDefinition>
-                <ColumnDefinition></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-
-            <Button x:Name="ChooseDirButton" Content="Choose dir..."
-                    Grid.Column="0" Height="20" Width="100" 
-                    HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center"
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="ChooseDirButton" Content="Choose dir..."
+                    Height="20" Width="100" 
+                    HorizontalAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center"
                     Click="BtnChooseDir_Click"  />
-            <Button x:Name="ChooseFileButton" Content="Choose file..."
-                    Grid.Column="1" Height="20" Width="100"
-                    HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center"
+                <Button x:Name="ChooseFileButton" Content="Choose file..."
+                    Height="20" Width="100"
+                    HorizontalAlignment="Center" Margin="10,0,0,0" VerticalAlignment="Center"
                     Click="BtnChooseFile_Click" />
+            </StackPanel>
+            
         </Grid>
     </Grid>
 
