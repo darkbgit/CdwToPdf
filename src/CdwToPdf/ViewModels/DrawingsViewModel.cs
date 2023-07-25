@@ -23,10 +23,22 @@ public partial class DrawingsViewModel
 
         Drawings.First().IsGoodMarking = true;
 
+        //TODO Check specification on page
+        if (Drawings.First().DrawingType == DocType.Drawing && Drawings.First().IsAssemblyDrawing)
+        {
+            Drawings.First().IsGoodMarking = false;
+        }
+
         var previousMarking = Drawings.First().Marking;
 
         for (var i = 1; i < Drawings.Count; i++)
         {
+            if (Drawings[i].DrawingType == DocType.Drawing && Drawings[i].IsAssemblyDrawing && Drawings[i - 1].DrawingType != DocType.Specification)
+            {
+                Drawings[i].IsGoodMarking = false;
+                continue;
+            }
+
             var currentMarking = Drawings[i].Marking;
 
             var (previousAssemblyNumber, previousDetailNumber) = GetAssemblyAndDetailNumbers(previousMarking);
@@ -68,6 +80,23 @@ public partial class DrawingsViewModel
             }
 
             previousMarking = currentMarking;
+        }
+    }
+
+    public void CheckRateOfInspection()
+    {
+        var goodRateOfInspection = Drawings
+            .Select(d => d.RateOfInspection)
+            .GroupBy(r => r)
+            .OrderByDescending(g => g.Count())
+            .First().Key;
+
+        if (goodRateOfInspection != null)
+        {
+            foreach (var drawing in Drawings)
+            {
+                drawing.IsGoodRateOfInspection = drawing.RateOfInspection == goodRateOfInspection;
+            }
         }
     }
 

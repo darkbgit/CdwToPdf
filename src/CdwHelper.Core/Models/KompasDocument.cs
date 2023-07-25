@@ -7,6 +7,7 @@ namespace CdwHelper.Core.Models;
 public class KompasDocument : INotifyPropertyChanged
 {
     private bool _isGoodMarking = true;
+    private bool _isGoodRateOfInspection = true;
 
     public bool IsAssemblyDrawing { get; set; }
     public DocType DrawingType { get; set; }
@@ -30,6 +31,16 @@ public class KompasDocument : INotifyPropertyChanged
         set
         {
             _isGoodMarking = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsGoodRateOfInspection
+    {
+        get => _isGoodRateOfInspection;
+        set
+        {
+            _isGoodRateOfInspection = value;
             OnPropertyChanged();
         }
     }

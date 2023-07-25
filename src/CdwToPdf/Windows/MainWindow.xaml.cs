@@ -78,7 +78,8 @@ public partial class MainWindow : Window
         }
 
         ((DrawingsViewModel)DataContext).Drawings
-            .Sort((a, b) => string.Compare(a.Marking, b.Marking, StringComparison.Ordinal));
+            .SortByMarking();
+        //    .Sort((a, b) => string.Compare(a.Marking, b.Marking, StringComparison.Ordinal));
 
         MessageBox.Show("Done");
 
@@ -437,5 +438,6 @@ public partial class MainWindow : Window
     private void CheckMarkingsButton_OnClick(object sender, RoutedEventArgs e)
     {
         ((DrawingsViewModel)DataContext).CheckMarkings();
+        ((DrawingsViewModel)DataContext).CheckRateOfInspection();
     }
 }

@@ -97,7 +97,19 @@
                         <GridViewColumn DisplayMemberBinding="{Binding Name}">Наименование</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding StampAuthor}">Разработал</GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding CheckedBy}">Проверил</GridViewColumn>
-                        <GridViewColumn DisplayMemberBinding="{Binding RateOfInspection}">Нормоконтроль</GridViewColumn>
+                        <GridViewColumn Header="Нормоконтроль">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type models:KompasDocument}">
+                                    <TextBlock x:Name="MarkingTextBlock" Text="{ Binding RateOfInspection}"></TextBlock>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsGoodRateOfInspection}" Value="false">
+                                            <Setter TargetName="MarkingTextBlock" Property="Background" Value="Red" />
+                                            <Setter TargetName="MarkingTextBlock" Property="ToolTip" Value="Проверьте нормоконтроль" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                         <GridViewColumn DisplayMemberBinding="{Binding FormatsName}" Header="Формат">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="{x:Type models:KompasDocument}">

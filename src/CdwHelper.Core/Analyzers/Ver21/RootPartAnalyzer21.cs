@@ -115,15 +115,7 @@ internal partial class RootPartAnalyzer21 : IRootPartAnalyzer
 
         if (name != null)
         {
-            name = name.Replace("@/", ". ");
-            //if (doc.IsAssemblyDrawing && name[^16..] == "Сборочный чертеж")
-            //{
-            //    name = name[..^18];
-            //}
-
-            name = ReplaceRegex().Replace(name, string.Empty);
-
-            doc.Name = name;
+            doc.Name = FormatName(name);
         }
 
         return doc;
@@ -178,15 +170,7 @@ internal partial class RootPartAnalyzer21 : IRootPartAnalyzer
 
         if (name != null)
         {
-            name = name.Replace("@/", ". ");
-            //if (doc.IsAssemblyDrawing && name[^16..] == "Сборочный чертеж")
-            //{
-            //    name = name[..^18];
-            //}
-
-            name = ReplaceRegex().Replace(name, string.Empty);
-
-            doc.Name = name;
+            doc.Name = FormatName(name);
         }
 
         return doc;
@@ -223,6 +207,24 @@ internal partial class RootPartAnalyzer21 : IRootPartAnalyzer
                       ?? string.Empty;
 
         return doc;
+    }
+
+    private static string FormatName(string name)
+    {
+        if (name.Contains(".@/"))
+        {
+            name = name.Replace(".@/", ". ");
+        }
+
+        name = name.Replace("@/", ". ");
+        //if (doc.IsAssemblyDrawing && name[^16..] == "Сборочный чертеж")
+        //{
+        //    name = name[..^18];
+        //}
+
+        name = ReplaceRegex().Replace(name, string.Empty);
+
+        return name;
     }
 
     private static IEnumerable<Format> ParseFormat2D(string? fullFormat)
@@ -269,6 +271,9 @@ internal partial class RootPartAnalyzer21 : IRootPartAnalyzer
 
     [GeneratedRegex("[\\/?:*\"><|]+", RegexOptions.Compiled)]
     private static partial Regex ReplaceRegex();
+
+    //[GeneratedRegex("", RegexOptions.Compiled)]
+    //private static partial Regex ReplaceNewLineBreak();
 
     //public void RenameInZipFile()
     //{
