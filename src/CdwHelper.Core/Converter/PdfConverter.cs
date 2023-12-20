@@ -62,6 +62,8 @@ internal class PdfConverter : IPdfConverter
                 continue;
             }
 
+
+
             var pdfFilePath = file.FullFileName[..(lastIndex + 1)] + file.Name + PdfExtension;
 
             if (converter.Convert(file.FullFileName, pdfFilePath, 0, false) == 0)
@@ -123,7 +125,7 @@ internal class PdfConverter : IPdfConverter
 
         var newFilepath = first.FullFileName
             [..(kompasDocuments.First().FullFileName.LastIndexOf('\\') + 1)]
-                          + first.Marking
+                          + first.Marking.Replace('/', '@')
                           + " - "
                           + first.Name
                           + filePrefix
