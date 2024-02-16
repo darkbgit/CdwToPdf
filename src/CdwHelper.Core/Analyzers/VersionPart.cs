@@ -40,6 +40,7 @@ internal class VersionPart
             "19.0" => KompasVersion.V19,
             "20.0" => KompasVersion.V20,
             "21.0" => KompasVersion.V21,
+            "22.0" => KompasVersion.V22,
             _ => throw new AnalyzeException($"Wrong version {version}.")
         };
 
